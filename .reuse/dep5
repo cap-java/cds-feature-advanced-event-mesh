@@ -1,7 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: advanced-event-mesh
+Upstream-Name: cds-feature-advanced-event-mesh
 Upstream-Contact: ospo@sap.com
-Source: https://github.com/cap-java/advanced-event-mesh
+Source: https://github.com/cap-java/cds-feature-advanced-event-mesh
 Disclaimer: The code in this project may include calls to APIs ("API Calls") of
  SAP or third-party products or services developed outside of this project
  ("External Products").
@@ -25,5 +25,5 @@ Disclaimer: The code in this project may include calls to APIs ("API Calls") of
  parties the right to use of access any SAP External Product, through API Calls.
 
 Files: *
-Copyright:  2025 SAP SE or an SAP affiliate company and advanced-event-mesh contributors
+Copyright:  2025 SAP SE or an SAP affiliate company and cds-feature-advanced-event-mesh contributors
 License: Apache-2.0
