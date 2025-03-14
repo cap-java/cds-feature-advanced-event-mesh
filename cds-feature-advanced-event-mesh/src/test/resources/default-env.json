@@ -1,0 +1,33 @@
+{
+  "VCAP_SERVICES": {
+    "advanced-event-mesh": [
+      {
+        "label": "advanced-event-mesh",
+        "name": "advanced-event-mesh",
+        "tags": [],
+        "instance_guid": "515066ab-029d-4cdd-a116-a2c254633b6b",
+        "instance_name": "advanced-event-mesh",
+        "binding_guid": "5aec22e5-8380-47a2-99ae-1c4011cdcf88",
+        "binding_name": null,
+        "credentials": {
+          "vpn": "capservice",
+          "authentication-service": {
+            "tokenendpoint": "https://ad8obf0da.accounts400.ondemand.com/oauth2/token",
+            "clientid": "a5fe563c-76a3-4507-b107-63f2a112ee4a",
+            "clientsecret": "ch80Nj]-L[vw[EjZyPB1D-:iRW._:Mm0="
+          },
+          "endpoints": {
+            "advanced-event-mesh": {
+              "uri": "https://mr-connection-i90693rt5n6.messaging.solace.cloud:943/SEMP/v2/config",
+              "always-requires-token": true,
+              "amqp_uri": "amqps://mr-connection-i90693rt5n6.messaging.solace.cloud:5671",
+              "smf_uri": "wss://mr-connection-i90693rt5n6.messaging.solace.cloud:443"
+            }
+          }
+        },
+        "syslog_drain_url": null,
+        "volume_mounts": []
+      }
+    ]
+  }
+}
