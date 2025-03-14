@@ -23,8 +23,8 @@ public class AemTokenFetchClient extends JsonRestClient {
 		//JsonNode response = this.getRequest("?grant_type=client_credentials");
 		String requestBody = String.format(
 				"grant_type=client_credentials&client_id=%s&client_secret=%s",
-				URLEncoder.encode("a5fe563c-76a3-4507-b107-63f2a112ee4a", StandardCharsets.UTF_8),
-				URLEncoder.encode("ch80Nj]-L[vw[EjZyPB1D-:iRW._:Mm0=", StandardCharsets.UTF_8));
+				URLEncoder.encode("TODO", StandardCharsets.UTF_8),
+				URLEncoder.encode("TODO", StandardCharsets.UTF_8));
 		JsonNode response = this.postRequest(
 				"",
 				requestBody,
