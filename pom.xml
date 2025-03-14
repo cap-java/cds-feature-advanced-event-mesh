@@ -40,7 +40,7 @@
 
   <name>CDS plugin for SAP Integration Suite, advanced event mesh - Root</name>
   <description>This artifact is a CAP Java plugin that provides out-of-the box integration with SAP Integration Suite, advanced event mesh.</description>
-  <url>https://cap.cloud.sap/docs/plugins/#event-broker-plugin</url> <!-- TODO -->
+  <url>https://cap.cloud.sap/docs/plugins/#advanced-event-mesh-plugin</url> <!-- TODO -->
 
   <modules>
     <module>cds-feature-advanced-event-mesh</module>

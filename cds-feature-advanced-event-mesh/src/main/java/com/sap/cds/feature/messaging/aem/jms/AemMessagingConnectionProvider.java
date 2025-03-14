@@ -17,13 +17,6 @@ import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.messaging.jms.BrokerConnection;
 import com.sap.cds.services.messaging.jms.BrokerConnectionProvider;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
-import com.sap.cloud.sdk.cloudplatform.connectivity.AuthenticationType;
-import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultDestinationLoader;
-import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultHttpDestination;
-import com.sap.cloud.sdk.cloudplatform.connectivity.DestinationAccessor;
-import com.sap.cloud.sdk.cloudplatform.connectivity.HttpDestination;
-import com.sap.cloud.sdk.cloudplatform.connectivity.exception.DestinationAccessException;
-import com.sap.cloud.sdk.cloudplatform.connectivity.exception.DestinationNotFoundException;
 
 import jakarta.jms.Connection;
 
@@ -35,20 +28,14 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 	private static final String SASL_MECHANISM_URI_PARAMETER = "/?amqp.saslMechanisms=XOAUTH2";
 
 	private final ServiceBinding binding;
-	private final AemAuthorizationServiceView authorizationServiceView;
 	private final AemEndpointView endpointView;
-	private AemTokenFetchClient tokenFetchClient;
+	private final AemTokenFetchClient tokenFetchClient;
 
 	public AemMessagingConnectionProvider(ServiceBinding binding) {
 		super(binding.getName().get());
 		this.binding = binding;
-		this.authorizationServiceView = new AemAuthorizationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);
-
-		if (this.authorizationServiceView.isTokenEndpointPresent()) {
-			this.registerTokenFetchDestination();
-			this.tokenFetchClient = new AemTokenFetchClient(AEM_TOKEN_FETCH_DESTINATION);
-		}
+		this.tokenFetchClient = new AemTokenFetchClient(new AemAuthorizationServiceView(binding));
 	}
 
 	@Override
@@ -60,7 +47,6 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 				"AMQP URI key is missing in the service binding. Please check the service binding configuration."));
 		amqpUri = amqpUri + SASL_MECHANISM_URI_PARAMETER;
 
-		// TODO: What if IAS is used?
 		final BiFunction<Connection, URI, Object> tokenExtension = new BiFunction<>() {
 			private volatile String token = null;
 			private long currentTokenExpirationTime; // 10 minutes
@@ -72,7 +58,7 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 				if (currentTime > currentTokenExpirationTime) {
 					try {
 						this.token = tokenFetchClient.fetchToken().orElseThrow(() -> new ServiceException("Token is missing"));
-						this.currentTokenExpirationTime = currentTime + 10 * 60 * 1000; // 10 minutes
+						this.currentTokenExpirationTime = currentTime + 5 * 60 * 1000; // 5 minutes
 					} catch (IOException e) {
 						throw new RuntimeException(e);
 					}
@@ -82,39 +68,12 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 			}
 		};
 
-		logger.debug("Creating connection factory fo service binding '{}'",
-				this.binding.getName().get());
+		logger.debug("Creating connection factory fo service binding '{}'", this.binding.getName().get());
+		// the password is going to be replaced by the token
 		JmsConnectionFactory factory = new JmsConnectionFactory(this.endpointView.getVpn().get(), "token", amqpUri);
 		factory.setExtension(JmsConnectionExtensions.PASSWORD_OVERRIDE.toString(), tokenExtension);
 
 		return new BrokerConnection(name, factory);
-	}
-
-	private void registerTokenFetchDestination() {
-		if (!destinationExists()) {
-			HttpDestination destination = DefaultHttpDestination
-					.builder(this.authorizationServiceView.getTokenEndpoint().get())
-					.name(AEM_TOKEN_FETCH_DESTINATION)
-					// TODO remove the commented code if it working without
-					//.authenticationType(AuthenticationType.NO_AUTHENTICATION)
-					.authenticationType(AuthenticationType.BASIC_AUTHENTICATION)
-					.basicCredentials(this.authorizationServiceView.getClientId().get(), this.authorizationServiceView.getClientSecret().get())
-					.build();
-			DefaultDestinationLoader loader = new DefaultDestinationLoader().registerDestination(destination);
-
-			DestinationAccessor.appendDestinationLoader(loader);
-		}
-	}
-
-	private boolean destinationExists() {
-		try {
-			DestinationAccessor.getDestination(AEM_TOKEN_FETCH_DESTINATION);
-			return true;
-		} catch (DestinationAccessException | DestinationNotFoundException e) {
-			// Empty by design
-		}
-
-		return false;
 	}
 
 }

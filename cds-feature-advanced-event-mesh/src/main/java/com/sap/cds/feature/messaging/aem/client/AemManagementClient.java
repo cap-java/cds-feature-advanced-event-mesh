@@ -35,14 +35,13 @@ public class AemManagementClient extends JsonRestClient {
 
 	private final ServiceBinding binding;
 	private final String vpn;
-	private final String owner; // TODO Remove?
+	private final String owner;
 
 	public AemManagementClient(ServiceBinding binding) {
 		super(ServiceBindingDestinationOptions.forService(binding).build());
 		this.binding = binding;
 		this.vpn = getVpn();
-		//this.owner = getOwner();
-		this.owner = this.vpn;
+		this.owner = getOwner();
 	}
 
 	public void removeQueue(String queue) throws IOException {
@@ -144,7 +143,7 @@ public class AemManagementClient extends JsonRestClient {
 	}
 
 	private String getOwner() {
-		return (String) this.binding.getCredentials().get("user");
+		return getVpn()	;
 	}
 
 }
