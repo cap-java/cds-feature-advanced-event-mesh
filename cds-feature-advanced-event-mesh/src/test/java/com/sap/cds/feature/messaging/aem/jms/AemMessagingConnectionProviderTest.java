@@ -47,8 +47,6 @@ public class AemMessagingConnectionProviderTest {
 
 	@Test
 	void testCreateBrokerConnection_Success() throws Exception {
-		when(endpointView.getAmqpUriKey()).thenReturn(Optional.of("amqp://example.com"));
-		when(endpointView.getVpn()).thenReturn(Optional.of("test-vpn"));
 		when(serviceBinding.getCredentials()).thenReturn(
 				Map.of("endpoints", Map.of("advanced-event-mesh", Map.of("amqp_uri", "amqp://example.com")),
 						"vpn", "test-vpn")
@@ -63,8 +61,6 @@ public class AemMessagingConnectionProviderTest {
 
 	@Test
 	void testCreateBrokerConnection_MissingAmqpUri() {
-		when(endpointView.getAmqpUriKey()).thenReturn(Optional.empty());
-
 		ServiceException exception = assertThrows(ServiceException.class, () -> {
 			connectionProvider.createBrokerConnection("test-connection", Map.of());
 		});
@@ -74,8 +70,6 @@ public class AemMessagingConnectionProviderTest {
 
 	@Test
 	void testCreateBrokerConnection_MissingToken() throws IOException {
-		when(endpointView.getAmqpUriKey()).thenReturn(Optional.of("amqp://example.com"));
-		when(endpointView.getVpn()).thenReturn(Optional.of("test-vpn"));
 		when(tokenFetchClient.fetchToken()).thenReturn(Optional.empty());
 
 		ServiceException exception = assertThrows(ServiceException.class, () -> {
@@ -87,8 +81,6 @@ public class AemMessagingConnectionProviderTest {
 
 	@Test
 	void testCreateBrokerConnection_TokenFetch() throws IOException {
-		when(endpointView.getAmqpUriKey()).thenReturn(Optional.of("amqp://example.com"));
-		when(endpointView.getVpn()).thenReturn(Optional.of("test-vpn"));
 		when(serviceBinding.getCredentials()).thenReturn(
 				Map.of("endpoints", Map.of("advanced-event-mesh", Map.of("amqp_uri", "amqp://example.com")),
 						"vpn", "test-vpn")
