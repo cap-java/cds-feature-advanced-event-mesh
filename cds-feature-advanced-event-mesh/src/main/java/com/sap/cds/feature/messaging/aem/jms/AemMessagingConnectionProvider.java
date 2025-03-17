@@ -48,29 +48,22 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 		amqpUri = amqpUri + SASL_MECHANISM_URI_PARAMETER;
 
 		final BiFunction<Connection, URI, Object> tokenExtension = new BiFunction<>() {
-			private volatile String token = null;
-			private long currentTokenExpirationTime; // 10 minutes
-
 			@Override
 			public Object apply(final Connection connection, final URI uri) {
-				long currentTime = System.currentTimeMillis();
+				try {
+					String token = tokenFetchClient.fetchToken().orElseThrow(() -> new ServiceException("Token is missing"));
 
-				if (currentTime > currentTokenExpirationTime) {
-					try {
-						this.token = tokenFetchClient.fetchToken().orElseThrow(() -> new ServiceException("Token is missing"));
-						this.currentTokenExpirationTime = currentTime + 5 * 60 * 1000; // 5 minutes
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					return token;
+				} catch (IOException e) {
+					throw new ServiceException(e);
 				}
-
-				return this.token;
 			}
 		};
 
 		logger.debug("Creating connection factory fo service binding '{}'", this.binding.getName().get());
 		// the password is going to be replaced by the token
 		JmsConnectionFactory factory = new JmsConnectionFactory(this.endpointView.getVpn().get(), "token", amqpUri);
+
 		factory.setExtension(JmsConnectionExtensions.PASSWORD_OVERRIDE.toString(), tokenExtension);
 
 		return new BrokerConnection(name, factory);

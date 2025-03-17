@@ -1,4 +1,4 @@
-package com.sap.cds.feature.messaging.aem;
+package com.sap.cds.feature.messaging.aem.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

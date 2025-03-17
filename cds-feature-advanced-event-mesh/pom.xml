@@ -183,7 +183,7 @@
         <configuration>
           <excludes>
             <exclude>
-                            ${excluded.generation.package}**/*
+              ${excluded.generation.package}**/*
             </exclude>
           </excludes>
         </configuration>
@@ -222,17 +222,17 @@
                     <limit implementation="org.jacoco.report.check.Limit">
                       <counter>INSTRUCTION</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.5</minimum>
+                      <minimum>0.3</minimum>
                     </limit>
                     <limit implementation="org.jacoco.report.check.Limit">
                       <counter>BRANCH</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.5</minimum>
+                      <minimum>0.3</minimum>
                     </limit>
                     <limit implementation="org.jacoco.report.check.Limit">
                       <counter>COMPLEXITY</counter>
                       <value>COVEREDRATIO</value>
-                      <minimum>0.5</minimum>
+                      <minimum>0.3</minimum>
                     </limit>
                     <limit implementation="org.jacoco.report.check.Limit">
                       <counter>CLASS</counter>

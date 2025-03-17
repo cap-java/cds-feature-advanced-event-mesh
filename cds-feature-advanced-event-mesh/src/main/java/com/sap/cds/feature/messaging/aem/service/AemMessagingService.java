@@ -5,6 +5,7 @@ import static com.sap.cds.feature.messaging.aem.client.AemManagementClient.ATTR_
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.apache.qpid.jms.message.JmsBytesMessage;
 import org.apache.qpid.jms.message.JmsTextMessage;
@@ -44,7 +45,7 @@ public class AemMessagingService extends AbstractMessagingService {
 	@Override
 	public void init() {
 		logger.debug("Creating the broker connection asynchronously with topic subscriptions.");
-		connectionProvider.asyncConnectionInitialization(serviceConfig, connection -> {
+		this.asyncConnectionInitialization(connection -> {
 			this.connection = connection;
 			super.init();
 
@@ -97,7 +98,11 @@ public class AemMessagingService extends AbstractMessagingService {
 
 	@Override
 	protected void emitTopicMessage(String topic, TopicMessageEventContext messageEventContext) {
-		connection.emitTopicMessage("topic://" + topic, messageEventContext);
+		this.connection.emitTopicMessage("topic://" + topic, messageEventContext);
+	}
+
+	private void asyncConnectionInitialization(Consumer<BrokerConnection> connectionConsumer) {
+		connectionProvider.asyncConnectionInitialization(serviceConfig, connectionConsumer);
 	}
 
 	private String getMessageTopic(Message message) {
