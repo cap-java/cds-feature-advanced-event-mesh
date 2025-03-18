@@ -24,7 +24,6 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 
 	private static final Logger logger = LoggerFactory.getLogger(AemMessagingConnectionProvider.class);
 
-	private static final String AEM_TOKEN_FETCH_DESTINATION = "x-cap-aem-token-fetch-destination";
 	private static final String SASL_MECHANISM_URI_PARAMETER = "/?amqp.saslMechanisms=XOAUTH2";
 
 	private final ServiceBinding binding;
