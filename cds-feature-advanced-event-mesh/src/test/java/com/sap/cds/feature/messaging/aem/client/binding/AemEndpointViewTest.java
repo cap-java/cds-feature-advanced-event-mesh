@@ -49,7 +49,7 @@ public class AemEndpointViewTest {
     }
 
     @Test
-    void testGetAmqpUriKey() {
+    void testGetAmqpUri() {
         Map<String, Object> credentials = Map.of(
             "endpoints", Map.of(
                 "advanced-event-mesh", Map.of("amqp_uri", "amqp://example.com")
@@ -57,16 +57,16 @@ public class AemEndpointViewTest {
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
-        Optional<String> amqpUri = endpointView.getAmqpUriKey();
+        Optional<String> amqpUri = endpointView.getAmqpUri();
         assertTrue(amqpUri.isPresent());
         assertEquals("amqp://example.com", amqpUri.get());
     }
 
     @Test
-    void testGetAmqpUriKey_NotPresent() {
+    void testGetAmqpUri_NotPresent() {
         when(serviceBinding.getCredentials()).thenReturn(Map.of());
 
-        Optional<String> amqpUri = endpointView.getAmqpUriKey();
+        Optional<String> amqpUri = endpointView.getAmqpUri();
         assertFalse(amqpUri.isPresent());
     }
 

@@ -41,7 +41,7 @@ public class AemEndpointView {
 	 * @return an {@link Optional} containing the AMQP URI if present, otherwise an
 	 *         empty {@link Optional}.
 	 */
-	public Optional<String> getAmqpUriKey() {
+	public Optional<String> getAmqpUri() {
 		return Optional.ofNullable((String) getAemEndpoint().get(AMQP_URI_KEY));
 	}
 
