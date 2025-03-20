@@ -12,16 +12,16 @@
         "credentials": {
           "vpn": "capservice",
           "authentication-service": {
-            "tokenendpoint": "https://ad8obf0da.accounts400.ondemand.com/oauth2/token",
-            "clientid": "a5fe563c-76a3-4507-b107-63f2a112ee4a",
-            "clientsecret": "ch80Nj]-L[vw[EjZyPB1D-:iRW._:Mm0="
+            "tokenendpoint": "https://my.host.com/oauth2/token",
+            "clientid": "myid",
+            "clientsecret": "mysecret"
           },
           "endpoints": {
             "advanced-event-mesh": {
-              "uri": "https://mr-connection-i90693rt5n6.messaging.solace.cloud:943/SEMP/v2/config",
+              "uri": "https://my.other.host.com:943/SEMP/v2/config",
               "always-requires-token": true,
-              "amqp_uri": "amqps://mr-connection-i90693rt5n6.messaging.solace.cloud:5671",
-              "smf_uri": "wss://mr-connection-i90693rt5n6.messaging.solace.cloud:443"
+              "amqp_uri": "amqps://broker.host.com:5671",
+              "smf_uri": "wss://broker.host.com:443"
             }
           }
         },
