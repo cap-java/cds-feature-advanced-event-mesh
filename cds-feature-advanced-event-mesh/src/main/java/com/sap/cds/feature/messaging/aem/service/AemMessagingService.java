@@ -3,8 +3,10 @@ package com.sap.cds.feature.messaging.aem.service;
 import static com.sap.cds.feature.messaging.aem.client.AemManagementClient.ATTR_DEAD_MSG_QUEUE;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.apache.qpid.jms.message.JmsBytesMessage;
@@ -15,7 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sap.cds.feature.messaging.aem.client.AemManagementClient;
+import com.sap.cds.feature.messaging.aem.client.AemValidationClient;
 import com.sap.cds.feature.messaging.aem.jms.AemMessagingConnectionProvider;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.environment.CdsProperties.Messaging.MessagingServiceConfig;
 import com.sap.cds.services.messaging.TopicMessageEventContext;
 import com.sap.cds.services.messaging.jms.BrokerConnection;
@@ -32,14 +36,20 @@ public class AemMessagingService extends AbstractMessagingService {
 
 	private final AemMessagingConnectionProvider connectionProvider;
 	private final AemManagementClient managementClient;
+	private final Optional<ServiceBinding> validationBinding;
 
 	private volatile BrokerConnection connection;
+	private volatile Boolean aemBrokerValidated = false;
 
-	protected AemMessagingService(ServiceBinding binding, MessagingServiceConfig serviceConfig, AemMessagingConnectionProvider connectionProvider, CdsRuntime runtime) {
+	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+	protected AemMessagingService(ServiceBinding binding, Optional<ServiceBinding> validationBinding,
+			MessagingServiceConfig serviceConfig, AemMessagingConnectionProvider connectionProvider, CdsRuntime runtime) {
+
 		super(serviceConfig, runtime);
 
 		this.connectionProvider = connectionProvider;
 		this.managementClient = new AemManagementClient(binding);
+		this.validationBinding = validationBinding;
 	}
 
 	@Override
@@ -98,6 +108,7 @@ public class AemMessagingService extends AbstractMessagingService {
 
 	@Override
 	protected void emitTopicMessage(String topic, TopicMessageEventContext messageEventContext) {
+		this.validate(this.managementClient.getEndpoint());
 		this.connection.emitTopicMessage("topic://" + topic, messageEventContext);
 	}
 
@@ -116,4 +127,23 @@ public class AemMessagingService extends AbstractMessagingService {
 		}
 		return null;
 	}
+
+	private void validate(String endpoint) {
+		synchronized (this.aemBrokerValidated) {
+			if (!this.aemBrokerValidated) {
+				ServiceBinding binding = this.validationBinding.orElseThrow(() -> new ServiceException("No binding for AEM Validation Service found."));
+				AemValidationClient validationClient = new AemValidationClient(binding);
+
+				try {
+					validationClient.validate(endpoint);
+					synchronized (this.aemBrokerValidated) {
+						this.aemBrokerValidated = true;
+					}
+				} catch (IOException | URISyntaxException e) {
+					throw new ServiceException("Failed to validate the AEM endpoint.", e);
+				}
+			}
+		}
+	}
+
 }

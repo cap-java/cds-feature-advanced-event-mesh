@@ -14,7 +14,7 @@ import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 
-public class AemOauth2PropertySupplier implements OAuth2PropertySupplier {
+public class AemManagementOauth2PropertySupplier implements OAuth2PropertySupplier {
 
 	private static boolean initialized = false;
 
@@ -27,12 +27,12 @@ public class AemOauth2PropertySupplier implements OAuth2PropertySupplier {
 			OAuth2ServiceBindingDestinationLoader.registerPropertySupplier(
 					options -> ServiceBindingUtils.matches(options.getServiceBinding(),
 							AemMessagingServiceConfiguration.BINDING_AEM_LABEL),
-					AemOauth2PropertySupplier::new);
+					AemManagementOauth2PropertySupplier::new);
 			initialized = true;
 		}
 	}
 
-	public AemOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
+	public AemManagementOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
 		this.binding = options.getServiceBinding();
 		this.authorizationServiceView = new AemAuthorizationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);
@@ -69,7 +69,7 @@ public class AemOauth2PropertySupplier implements OAuth2PropertySupplier {
 	@Nonnull
 	@Override
 	public com.sap.cloud.security.config.ClientIdentity getClientIdentity() {
-		return new ClientIdentity(this.authorizationServiceView.getClientId().get(),
+		return new AemClientIdentity(this.authorizationServiceView.getClientId().get(),
 				this.authorizationServiceView.getClientSecret().get());
 	}
 
@@ -85,17 +85,4 @@ public class AemOauth2PropertySupplier implements OAuth2PropertySupplier {
 				&& this.authorizationServiceView.getClientSecret().isPresent();
 	}
 
-	private record ClientIdentity(String clientId, String clientSecret)
-			implements com.sap.cloud.security.config.ClientIdentity {
-
-		@Override
-		public String getId() {
-			return this.clientId;
-		}
-
-		@Override
-		public String getSecret() {
-			return this.clientSecret;
-		}
-	}
 }

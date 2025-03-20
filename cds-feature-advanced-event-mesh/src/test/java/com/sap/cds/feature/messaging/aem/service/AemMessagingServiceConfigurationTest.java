@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-import com.sap.cds.feature.messaging.aem.service.AemMessagingService;
 import com.sap.cds.services.environment.CdsProperties;
 import com.sap.cds.services.environment.CdsProperties.Messaging.MessagingServiceConfig;
 import com.sap.cds.services.impl.environment.SimplePropertiesProvider;

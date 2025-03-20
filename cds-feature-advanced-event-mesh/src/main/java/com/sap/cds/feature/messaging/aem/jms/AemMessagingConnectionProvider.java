@@ -9,8 +9,9 @@ import org.apache.qpid.jms.JmsConnectionExtensions;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
-import com.sap.cds.feature.messaging.aem.client.binding.AemOauth2PropertySupplier;
+import com.sap.cds.feature.messaging.aem.client.binding.AemManagementOauth2PropertySupplier;
 import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.messaging.jms.BrokerConnection;
 import com.sap.cds.services.messaging.jms.BrokerConnectionProvider;
@@ -39,7 +40,7 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 		super(binding.getName().get());
 		this.binding = binding;
 		this.endpointView = new AemEndpointView(binding);
-		OAuth2PropertySupplier supplier = new AemOauth2PropertySupplier(ServiceBindingDestinationOptions.forService(binding).build());
+		OAuth2PropertySupplier supplier = new AemManagementOauth2PropertySupplier(ServiceBindingDestinationOptions.forService(binding).build());
 		this.destination = OAuth2DestinationBuilder
 				.forTargetUrl(this.endpointView.getAmqpUri().get())
 				.withTokenEndpoint(supplier.getTokenUri().toString())
