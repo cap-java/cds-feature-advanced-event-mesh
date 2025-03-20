@@ -251,8 +251,8 @@
 
   <scm>
     <url>https://github.com/cap-java/advanced-event-mesh</url>
-    <connection>scm:git:git@github.com:cap-java/advanced-event-mesh.git</connection>
-    <developerConnection>scm:git:git@github.com:cap-java/advanced-event-mesh.git</developerConnection>
+    <connection>scm:git:git@github.com:cap-java/cds-feature-advanced-event-mesh.git</connection>
+    <developerConnection>scm:git:git@github.com:cap-java/cds-feature-advanced-event-mesh.git</developerConnection>
   </scm>
 
  </project>
