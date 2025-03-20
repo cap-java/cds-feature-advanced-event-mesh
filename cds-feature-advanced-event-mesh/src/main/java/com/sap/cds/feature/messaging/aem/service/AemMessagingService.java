@@ -129,21 +129,17 @@ public class AemMessagingService extends AbstractMessagingService {
 	}
 
 	private void validate(String endpoint) {
-		synchronized (this.aemBrokerValidated) {
 			if (!this.aemBrokerValidated) {
 				ServiceBinding binding = this.validationBinding.orElseThrow(() -> new ServiceException("No binding for AEM Validation Service found."));
 				AemValidationClient validationClient = new AemValidationClient(binding);
 
 				try {
 					validationClient.validate(endpoint);
-					synchronized (this.aemBrokerValidated) {
-						this.aemBrokerValidated = true;
-					}
+					this.aemBrokerValidated = true;
 				} catch (IOException | URISyntaxException e) {
 					throw new ServiceException("Failed to validate the AEM endpoint.", e);
 				}
 			}
-		}
 	}
 
 }
