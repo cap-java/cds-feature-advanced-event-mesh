@@ -19,7 +19,7 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 	private static boolean initialized = false;
 
 	private final ServiceBinding binding;
-	private final AemAuthorizationServiceView authorizationServiceView;
+	private final AemAuthenticationServiceView authenticationServiceView;
 	private final AemEndpointView endpointView;
 
 	public static synchronized void initialize() {
@@ -34,7 +34,7 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 
 	public AemManagementOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
 		this.binding = options.getServiceBinding();
-		this.authorizationServiceView = new AemAuthorizationServiceView(binding);
+		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);
 	}
 
@@ -60,7 +60,7 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 	@Override
 	public URI getTokenUri() {
 		try {
-			return new URI(this.authorizationServiceView.getTokenEndpoint().get());
+			return new URI(this.authenticationServiceView.getTokenEndpoint().get());
 		} catch (URISyntaxException e) {
 			throw new ServiceException(e.getMessage(), e);
 		}
@@ -69,8 +69,8 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 	@Nonnull
 	@Override
 	public com.sap.cloud.security.config.ClientIdentity getClientIdentity() {
-		return new AemClientIdentity(this.authorizationServiceView.getClientId().get(),
-				this.authorizationServiceView.getClientSecret().get());
+		return new AemClientIdentity(this.authenticationServiceView.getClientId().get(),
+				this.authenticationServiceView.getClientSecret().get());
 	}
 
 	private boolean isAemBinding(ServiceBinding binding) {
@@ -80,9 +80,9 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 	}
 
 	private boolean areOAuth2ParametersPresent(ServiceBinding binding) {
-		return this.authorizationServiceView.getTokenEndpoint().isPresent()
-				&& this.authorizationServiceView.getClientId().isPresent()
-				&& this.authorizationServiceView.getClientSecret().isPresent();
+		return this.authenticationServiceView.getTokenEndpoint().isPresent()
+				&& this.authenticationServiceView.getClientId().isPresent()
+				&& this.authenticationServiceView.getClientSecret().isPresent();
 	}
 
 }

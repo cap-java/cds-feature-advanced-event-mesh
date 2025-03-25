@@ -9,7 +9,7 @@ import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
  * AemAuthorizationServiceView provides a view of the authorization service
  * credentials from a given ServiceBinding.
  */
-public class AemAuthorizationServiceView {
+public class AemAuthenticationServiceView {
 	private static final String CLIENTSECRET_KEY = "clientsecret";
 	private static final String CLIENTID_KEY = "clientid";
 	private static final String TOKENENDPOINT_KEY = "tokenendpoint";
@@ -17,7 +17,7 @@ public class AemAuthorizationServiceView {
 
 	private final ServiceBinding binding;
 
-	public AemAuthorizationServiceView(ServiceBinding binding) {
+	public AemAuthenticationServiceView(ServiceBinding binding) {
 		this.binding = binding;
 	}
 

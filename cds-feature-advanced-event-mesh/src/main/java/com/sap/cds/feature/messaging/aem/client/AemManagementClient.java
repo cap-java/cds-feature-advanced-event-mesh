@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.sap.cds.feature.messaging.aem.client.binding.AemAuthorizationServiceView;
+import com.sap.cds.feature.messaging.aem.client.binding.AemAuthenticationServiceView;
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
 import com.sap.cds.integration.cloudsdk.rest.client.JsonRestClient;
 import com.sap.cds.integration.cloudsdk.rest.client.JsonRestClientResponseException;
@@ -36,14 +36,14 @@ public class AemManagementClient extends JsonRestClient {
 	public static final String ATTR_QUEUE_NAME = "queueName";
 	public static final String ATTR_SUBSCRIPTION_TOPIC = "subscriptionTopic";
 
-	private final AemAuthorizationServiceView authorizationServiceView;
+	private final AemAuthenticationServiceView authenticationServiceView;
 	private final AemEndpointView endpointView;
 	private final String vpn;
 	private final String owner;
 
 	public AemManagementClient(ServiceBinding binding) {
 		super(ServiceBindingDestinationOptions.forService(binding).build());
-		this.authorizationServiceView = new AemAuthorizationServiceView(binding);
+		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);
 		this.vpn = getVpn();
 		this.owner = getOwner();

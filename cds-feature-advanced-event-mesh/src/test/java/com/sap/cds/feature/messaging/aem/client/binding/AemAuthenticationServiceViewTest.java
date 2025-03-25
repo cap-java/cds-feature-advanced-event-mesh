@@ -15,17 +15,17 @@ import org.mockito.MockitoAnnotations;
 
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 
-public class AemAuthorizationServiceViewTest {
+public class AemAuthenticationServiceViewTest {
 
     @Mock
     private ServiceBinding serviceBinding;
 
-    private AemAuthorizationServiceView authorizationServiceView;
+    private AemAuthenticationServiceView authenticationServiceView;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        authorizationServiceView = new AemAuthorizationServiceView(serviceBinding);
+        authenticationServiceView = new AemAuthenticationServiceView(serviceBinding);
     }
 
     @Test
@@ -39,14 +39,14 @@ public class AemAuthorizationServiceViewTest {
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
-        assertTrue(authorizationServiceView.isTokenEndpointPresent());
+        assertTrue(authenticationServiceView.isTokenEndpointPresent());
     }
 
     @Test
     void testIsTokenEndpointPresent_NotPresent() {
         when(serviceBinding.getCredentials()).thenReturn(Map.of());
 
-        assertFalse(authorizationServiceView.isTokenEndpointPresent());
+        assertFalse(authenticationServiceView.isTokenEndpointPresent());
     }
 
     @Test
@@ -56,7 +56,7 @@ public class AemAuthorizationServiceViewTest {
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
-        Optional<String> tokenEndpoint = authorizationServiceView.getTokenEndpoint();
+        Optional<String> tokenEndpoint = authenticationServiceView.getTokenEndpoint();
         assertTrue(tokenEndpoint.isPresent());
         assertEquals("http://example.com/token", tokenEndpoint.get());
     }
@@ -65,7 +65,7 @@ public class AemAuthorizationServiceViewTest {
     void testGetTokenEndpoint_NotPresent() {
         when(serviceBinding.getCredentials()).thenReturn(Map.of());
 
-        Optional<String> tokenEndpoint = authorizationServiceView.getTokenEndpoint();
+        Optional<String> tokenEndpoint = authenticationServiceView.getTokenEndpoint();
         assertFalse(tokenEndpoint.isPresent());
     }
 
@@ -76,7 +76,7 @@ public class AemAuthorizationServiceViewTest {
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
-        Optional<String> clientId = authorizationServiceView.getClientId();
+        Optional<String> clientId = authenticationServiceView.getClientId();
         assertTrue(clientId.isPresent());
         assertEquals("test-client-id", clientId.get());
     }
@@ -85,7 +85,7 @@ public class AemAuthorizationServiceViewTest {
     void testGetClientId_NotPresent() {
         when(serviceBinding.getCredentials()).thenReturn(Map.of());
 
-        Optional<String> clientId = authorizationServiceView.getClientId();
+        Optional<String> clientId = authenticationServiceView.getClientId();
         assertFalse(clientId.isPresent());
     }
 
@@ -96,7 +96,7 @@ public class AemAuthorizationServiceViewTest {
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
-        Optional<String> clientSecret = authorizationServiceView.getClientSecret();
+        Optional<String> clientSecret = authenticationServiceView.getClientSecret();
         assertTrue(clientSecret.isPresent());
         assertEquals("test-client-secret", clientSecret.get());
     }
@@ -105,7 +105,7 @@ public class AemAuthorizationServiceViewTest {
     void testGetClientSecret_NotPresent() {
         when(serviceBinding.getCredentials()).thenReturn(Map.of());
 
-        Optional<String> clientSecret = authorizationServiceView.getClientSecret();
+        Optional<String> clientSecret = authenticationServiceView.getClientSecret();
         assertFalse(clientSecret.isPresent());
     }
 }
