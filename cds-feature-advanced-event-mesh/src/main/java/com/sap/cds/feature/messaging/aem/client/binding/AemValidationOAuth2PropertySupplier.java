@@ -8,12 +8,12 @@ import java.util.Optional;
 import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguration;
 import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.utils.environment.ServiceBindingUtils;
-import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
+import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultOAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import com.sap.cloud.security.config.ClientIdentity;
 
-public class AemValidationOAuth2PropertySupplier implements OAuth2PropertySupplier {
+public class AemValidationOAuth2PropertySupplier extends DefaultOAuth2PropertySupplier {
 
 	private static boolean initialized = false;
 
@@ -30,6 +30,7 @@ public class AemValidationOAuth2PropertySupplier implements OAuth2PropertySuppli
 	}
 
 	protected AemValidationOAuth2PropertySupplier(ServiceBindingDestinationOptions options) {
+		super(options);
 		this.credentialsView = new CredentialsView(options.getServiceBinding().getCredentials());
 	}
 

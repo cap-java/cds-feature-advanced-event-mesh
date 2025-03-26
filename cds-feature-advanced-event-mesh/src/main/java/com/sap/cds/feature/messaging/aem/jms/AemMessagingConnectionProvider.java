@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
+import org.apache.http.HttpHeaders;
 import org.apache.qpid.jms.JmsConnectionExtensions;
 import org.apache.qpid.jms.JmsConnectionFactory;
 import org.slf4j.Logger;
@@ -21,7 +22,6 @@ import com.sap.cloud.sdk.cloudplatform.connectivity.DestinationProperty;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OnBehalfOf;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
-import com.sap.cloud.security.xsuaa.http.HttpHeaders;
 
 import jakarta.jms.Connection;
 

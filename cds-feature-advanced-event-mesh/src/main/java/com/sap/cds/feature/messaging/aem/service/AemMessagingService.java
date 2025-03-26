@@ -36,13 +36,13 @@ public class AemMessagingService extends AbstractMessagingService {
 
 	private final AemMessagingConnectionProvider connectionProvider;
 	private final AemManagementClient managementClient;
-	private final Optional<ServiceBinding> validationBinding;
+	private final ServiceBinding validationBinding;
 
 	private volatile BrokerConnection connection;
 	private volatile Boolean aemBrokerValidated = false;
 
 	@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-	protected AemMessagingService(ServiceBinding binding, Optional<ServiceBinding> validationBinding,
+	protected AemMessagingService(ServiceBinding binding, ServiceBinding validationBinding,
 			MessagingServiceConfig serviceConfig, AemMessagingConnectionProvider connectionProvider, CdsRuntime runtime) {
 
 		super(serviceConfig, runtime);
@@ -130,8 +130,7 @@ public class AemMessagingService extends AbstractMessagingService {
 
 	private void validate(String endpoint) {
 			if (!this.aemBrokerValidated) {
-				ServiceBinding binding = this.validationBinding.orElseThrow(() -> new ServiceException("No binding for AEM Validation Service found."));
-				AemValidationClient validationClient = new AemValidationClient(binding);
+				AemValidationClient validationClient = new AemValidationClient(this.validationBinding);
 
 				try {
 					validationClient.validate(endpoint);

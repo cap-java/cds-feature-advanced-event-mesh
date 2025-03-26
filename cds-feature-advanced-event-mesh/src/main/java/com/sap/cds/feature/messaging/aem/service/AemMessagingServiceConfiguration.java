@@ -9,16 +9,17 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.sap.cds.feature.messaging.aem.client.binding.AemManagementOauth2PropertySupplier;
 import com.sap.cds.feature.messaging.aem.client.binding.AemValidationOAuth2PropertySupplier;
 import com.sap.cds.feature.messaging.aem.jms.AemMessagingConnectionProvider;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.environment.CdsProperties.Messaging;
 import com.sap.cds.services.environment.CdsProperties.Messaging.MessagingServiceConfig;
 import com.sap.cds.services.messaging.MessagingService;
 import com.sap.cds.services.runtime.CdsRuntime;
 import com.sap.cds.services.runtime.CdsRuntimeConfiguration;
 import com.sap.cds.services.runtime.CdsRuntimeConfigurer;
-import com.sap.cds.services.utils.StringUtils;
 import com.sap.cds.services.utils.environment.ServiceBindingUtils;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 
@@ -69,7 +70,7 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
 						if (serviceConfig.isEnabled()) {
 							// register the service
 							configurer.service(createMessagingService(binding, validationBinding, sharedConnectionProvider, serviceConfig,
-									configurer.getCdsRuntime(), Objects.equals(AEM_KIND, serviceConfig.getKind())));
+									configurer.getCdsRuntime()));
 						}
 					});
 				}
@@ -91,7 +92,7 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
 								.noneMatch(c -> c.getName().equals(serviceConfig.getName()))) {
 							// register the service
 							configurer.service(createMessagingService(binding, validationBinding, sharedConnectionProvider, serviceConfig,
-									configurer.getCdsRuntime(), Objects.equals(AEM_KIND, serviceConfig.getKind())));
+									configurer.getCdsRuntime()));
 						}
 					});
 				}
@@ -101,10 +102,11 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
 
 					// otherwise create default service instance for the binding
 					MessagingServiceConfig defConfig = config.getService(binding.getName().get());
-					if (StringUtils.isEmpty(defConfig.getBinding()) && StringUtils.isEmpty(defConfig.getKind())) {
+
+					if (Strings.isNullOrEmpty(defConfig.getBinding()) && Strings.isNullOrEmpty(defConfig.getKind())) {
 						// register the service
 						configurer.service(createMessagingService(binding, validationBinding, sharedConnectionProvider, defConfig,
-								configurer.getCdsRuntime(), false));
+								configurer.getCdsRuntime()));
 					} else {
 						logger.warn(
 								"Could not create service for binding '{}': A configuration with the same name is already defined for another kind or binding.",
@@ -119,9 +121,10 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
 	}
 
 	private MessagingService createMessagingService(ServiceBinding binding, Optional<ServiceBinding> validationBinding,
-			AemMessagingConnectionProvider sharedConnectionProvider, MessagingServiceConfig serviceConfig,
-			CdsRuntime runtime, boolean forceShared) {
-		MessagingService service = new AemMessagingService(binding, validationBinding, serviceConfig, sharedConnectionProvider, runtime);
+			AemMessagingConnectionProvider sharedConnectionProvider, MessagingServiceConfig serviceConfig, CdsRuntime runtime) {
+
+		ServiceBinding valBnd = validationBinding.orElseThrow(() -> new ServiceException("No binding for AEM Validation Service found."));
+		MessagingService service = new AemMessagingService(binding, valBnd, serviceConfig, sharedConnectionProvider, runtime);
 
 		logger.debug("Created messaging service '{}' for binding '{}'", serviceConfig.getName(),
 				binding.getName().get());
