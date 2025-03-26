@@ -28,7 +28,7 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
 
 	public static final String BINDING_AEM_LABEL = "advanced-event-mesh";
 	public static final String BINDING_AEM_VALIDATION_LABEL = "aem-validation-service";
-	public static final String AEM_KIND = "advanced-event-mesh";
+	public static final String AEM_KIND = "aem";
 
 	@Override
 	public void services(CdsRuntimeConfigurer configurer) {

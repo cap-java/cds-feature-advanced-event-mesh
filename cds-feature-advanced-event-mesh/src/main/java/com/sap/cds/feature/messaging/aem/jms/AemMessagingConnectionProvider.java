@@ -11,16 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
-import com.sap.cds.feature.messaging.aem.client.binding.AemManagementOauth2PropertySupplier;
 import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.messaging.jms.BrokerConnection;
 import com.sap.cds.services.messaging.jms.BrokerConnectionProvider;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
-import com.sap.cloud.sdk.cloudplatform.connectivity.AuthenticationType;
+import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultHttpDestination;
 import com.sap.cloud.sdk.cloudplatform.connectivity.Destination;
-import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2DestinationBuilder;
-import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
+import com.sap.cloud.sdk.cloudplatform.connectivity.DestinationProperty;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OnBehalfOf;
+import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import com.sap.cloud.security.xsuaa.http.HttpHeaders;
 
@@ -33,19 +32,24 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 	private static final String SASL_MECHANISM_URI_PARAMETER = "/?amqp.saslMechanisms=XOAUTH2";
 
 	private final ServiceBinding binding;
-	private final AemEndpointView endpointView;
 	private final Destination destination;
 
 	public AemMessagingConnectionProvider(ServiceBinding binding) {
 		super(binding.getName().get());
 		this.binding = binding;
-		this.endpointView = new AemEndpointView(binding);
-		OAuth2PropertySupplier supplier = new AemManagementOauth2PropertySupplier(ServiceBindingDestinationOptions.forService(binding).build());
-		this.destination = OAuth2DestinationBuilder
-				.forTargetUrl(this.endpointView.getAmqpUri().get())
-				.withTokenEndpoint(supplier.getTokenUri().toString())
-				.withClient(supplier.getClientIdentity(), OnBehalfOf.TECHNICAL_USER_CURRENT_TENANT)
-				.authenticationType(AuthenticationType.OAUTH2_CLIENT_CREDENTIALS)
+
+		AemEndpointView endpointView = new AemEndpointView(binding);
+		String amqpUri = endpointView.getAmqpUri().orElseThrow(() -> new ServiceException(
+				"AMQP URI key is missing in the service binding. Please check the service binding configuration."));
+		amqpUri = amqpUri + SASL_MECHANISM_URI_PARAMETER;
+
+		ServiceBindingDestinationOptions options = ServiceBindingDestinationOptions.forService(binding).
+				onBehalfOf(OnBehalfOf.TECHNICAL_USER_CURRENT_TENANT).build();
+
+		this.destination = DefaultHttpDestination.fromDestination(
+						ServiceBindingDestinationLoader.defaultLoaderChain().getDestination(options))
+				.uri(amqpUri)
+				.property("vpn", endpointView.getVpn().get())
 				.build();
 	}
 
@@ -53,10 +57,6 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 	protected BrokerConnection createBrokerConnection(String name, Map<String, String> clientProperties) throws Exception {
 		// see https://solace.community/discussion/1677/how-oauth-can-be-used-with-apache-qpid-jms-2-0-amqp
 		logger.debug("Retrieving credentials for Basic Auth from	service binding '{}'", binding.getName().get());
-
-		String amqpUri = this.endpointView.getAmqpUri().orElseThrow(() -> new ServiceException(
-				"AMQP URI key is missing in the service binding. Please check the service binding configuration."));
-		amqpUri = amqpUri + SASL_MECHANISM_URI_PARAMETER;
 
 		final BiFunction<Connection, URI, Object> tokenExtension = new BiFunction<>() {
 			@Override
@@ -69,7 +69,7 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
 
 		logger.debug("Creating connection factory fo service binding '{}'", this.binding.getName().get());
 		// the password is going to be replaced by the token
-		JmsConnectionFactory factory = new JmsConnectionFactory(this.endpointView.getVpn().get(), "token", amqpUri);
+		JmsConnectionFactory factory = new JmsConnectionFactory(destination.get("vpn", String.class).get(), "token", destination.get(DestinationProperty.URI).get());
 
 		factory.setExtension(JmsConnectionExtensions.PASSWORD_OVERRIDE.toString(), tokenExtension);
 

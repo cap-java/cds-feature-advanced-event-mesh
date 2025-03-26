@@ -5,11 +5,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-import com.sap.cds.integration.cloudsdk.rest.client.JsonRestClient;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 
-public class AemValidationClient extends JsonRestClient {
+public class AemValidationClient extends RestClient {
 
 	public AemValidationClient(ServiceBinding binding) {
 		super(ServiceBindingDestinationOptions.forService(binding).build());

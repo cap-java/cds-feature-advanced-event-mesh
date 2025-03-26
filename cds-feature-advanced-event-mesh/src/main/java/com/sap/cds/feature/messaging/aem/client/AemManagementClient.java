@@ -13,15 +13,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.sap.cds.feature.messaging.aem.client.binding.AemAuthenticationServiceView;
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
-import com.sap.cds.integration.cloudsdk.rest.client.JsonRestClient;
-import com.sap.cds.integration.cloudsdk.rest.client.JsonRestClientResponseException;
 import com.sap.cds.services.ServiceException;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 
-public class AemManagementClient extends JsonRestClient {
+public class AemManagementClient extends RestClient {
 	private static final Logger logger = LoggerFactory.getLogger(AemManagementClient.class);
 
 	private static final String API_BASE = "/msgVpns/%s";
@@ -36,14 +33,12 @@ public class AemManagementClient extends JsonRestClient {
 	public static final String ATTR_QUEUE_NAME = "queueName";
 	public static final String ATTR_SUBSCRIPTION_TOPIC = "subscriptionTopic";
 
-	private final AemAuthenticationServiceView authenticationServiceView;
 	private final AemEndpointView endpointView;
 	private final String vpn;
 	private final String owner;
 
 	public AemManagementClient(ServiceBinding binding) {
 		super(ServiceBindingDestinationOptions.forService(binding).build());
-		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);
 		this.vpn = getVpn();
 		this.owner = getOwner();
@@ -70,12 +65,7 @@ public class AemManagementClient extends JsonRestClient {
 			logger.debug("Successfully retrieved information for queue {}: {}", name, result.asText());
 
 			return result;
-		} catch (JsonRestClientResponseException e) {
-			if (e.getResponseCode() == HttpStatus.SC_NOT_FOUND) {
-				logger.debug("Queue {} not found", name);
-				return null;
-			}
-
+		} catch (Exception e) {
 			logger.error("Failed to retrieve information for queue {}", name, e);
 			return null;
 		}
