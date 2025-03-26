@@ -28,9 +28,10 @@ public class AemManagementClient extends RestClient {
 	public static final String ATTR_EGRESS_ENABLED = "egressEnabled";
 	public static final String ATTR_INGRESS_ENABLED = "ingressEnabled";
 	public static final String ATTR_DEAD_MSG_QUEUE = "deadMsgQueue";
-	public static final String ATTR_OWNER = "owner";
+	public static final String ATTR_PERMISSION = "permission";
 	public static final String ATTR_QUEUE_NAME = "queueName";
 	public static final String ATTR_SUBSCRIPTION_TOPIC = "subscriptionTopic";
+	public static final String VAL_CONSUME = "consume";
 
 	private final AemEndpointView endpointView;
 	private final String vpn;
@@ -80,7 +81,7 @@ public class AemManagementClient extends RestClient {
 
 			Map<String, Object> attributes = new HashMap<>(properties);
 			attributes.put(ATTR_QUEUE_NAME, name);
-			attributes.put(ATTR_OWNER, this.owner);
+			attributes.put(ATTR_PERMISSION, VAL_CONSUME);
 			attributes.put(ATTR_INGRESS_ENABLED, true);
 			attributes.put(ATTR_EGRESS_ENABLED, true);
 
