@@ -16,7 +16,7 @@ import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
  */
 public class AemEndpointView {
 	private static final String ENDPOINTS_KEY = "endpoints";
-	private static final String AMQP_URI_KEY = "amqp_uri";
+	// private static final String AMQP_URI_KEY = "amqp_uri";
 	private static final String URI_KEY = "uri";
 
 	private final ServiceBinding binding;
@@ -42,7 +42,7 @@ public class AemEndpointView {
 	 *         empty {@link Optional}.
 	 */
 	public Optional<String> getAmqpUri() {
-		return Optional.ofNullable((String) getAemEndpoint().get(AMQP_URI_KEY)).map(u -> u.replace("https://", "amqps://") + ":5671");
+		return Optional.ofNullable((String) getAemEndpoint().get(URI_KEY)).map(u -> u.replace("https://", "amqps://") + ":5671");
 	}
 
 	/**
