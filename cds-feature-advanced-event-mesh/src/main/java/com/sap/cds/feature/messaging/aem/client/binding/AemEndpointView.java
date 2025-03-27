@@ -32,11 +32,7 @@ public class AemEndpointView {
 	 *         {@link Optional}
 	 */
 	public Optional<String> getUri() {
-		Optional<String> uri = Optional.ofNullable((String) getAemEndpoint().get(URI_KEY));
-		if (uri.isPresent()) {
-			uri = Optional.of(uri.get() += ":943/SEMP/v2/config");
-		}
-		return uri;
+		return Optional.ofNullable((String) getAemEndpoint().get(URI_KEY)).map(u -> u + ":943/SEMP/v2/config");
 	}
 
 	/**
@@ -46,11 +42,7 @@ public class AemEndpointView {
 	 *         empty {@link Optional}.
 	 */
 	public Optional<String> getAmqpUri() {
-		Optional<String> amqp_uri = Optional.ofNullable((String) getAemEndpoint().get(AMQP_URI_KEY));
-		if (amqp_uri.isPresent()) {
-			amqp_uri = Optional.of(amqp_uri.get().replace("https://", "amqps://") += ":5671");
-		}
-		return amqp_uri;
+		return Optional.ofNullable((String) getAemEndpoint().get(AMQP_URI_KEY)).map(u -> u.replace("https://", "amqps://") + ":5671");
 	}
 
 	/**
