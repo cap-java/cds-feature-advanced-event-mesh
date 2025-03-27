@@ -32,14 +32,14 @@ public class AemEndpointViewTest {
     void testGetUri() {
         Map<String, Object> credentials = Map.of(
             "endpoints", Map.of(
-                "advanced-event-mesh", Map.of("uri", "http://example.com")
+                "advanced-event-mesh", Map.of("uri", "https://example.com")
             )
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
         Optional<String> uri = endpointView.getUri();
         assertTrue(uri.isPresent());
-        assertEquals("http://example.com", uri.get());
+        assertEquals("https://example.com:943/SEMP/v2/config", uri.get());
     }
 
     @Test
@@ -54,14 +54,14 @@ public class AemEndpointViewTest {
     void testGetAmqpUri() {
         Map<String, Object> credentials = Map.of(
             "endpoints", Map.of(
-                "advanced-event-mesh", Map.of("amqp_uri", "amqp://example.com")
+                "advanced-event-mesh", Map.of("uri", "https://example.com")
             )
         );
         when(serviceBinding.getCredentials()).thenReturn(credentials);
 
         Optional<String> amqpUri = endpointView.getAmqpUri();
         assertTrue(amqpUri.isPresent());
-        assertEquals("amqp://example.com", amqpUri.get());
+        assertEquals("amqps://example.com:5671", amqpUri.get());
     }
 
     @Test
