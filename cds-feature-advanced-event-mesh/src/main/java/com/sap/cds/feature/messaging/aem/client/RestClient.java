@@ -98,7 +98,7 @@ class RestClient {
 					if (resp.getEntity().getContentType() != null) {
 						contentType = resp.getEntity().getContentType().getValue();
 					}
-					if (contentType.startsWith(APPLICATION_JSON.toString())) {
+					if (APPLICATION_JSON.toString().startsWith(contentType)) {
 						String jsonData = EntityUtils.toString(resp.getEntity());
 						return mapper.readValue(jsonData, JsonNode.class);
 					} else {
