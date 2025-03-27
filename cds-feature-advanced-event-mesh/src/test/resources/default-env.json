@@ -1,8 +1,36 @@
 {
   "VCAP_SERVICES": {
-    "advanced-event-mesh": [
+    "aem-validation-service": [
       {
-        "label": "advanced-event-mesh",
+        "label": "aem-validation-service",
+        "provider": null,
+        "plan": "aem-validation-service-plan",
+        "name": "aem-validation",
+        "tags": ["eventing", "aem", "eventmesh"],
+        "instance_guid": "a0331f1c-8eda-4fa3-b09b-859aa4d94fcf",
+        "instance_name": "aem-validation",
+        "binding_guid": "6f1dd05f-fe56-4b6a-a3a2-c03224ce14b6",
+        "binding_name": null,
+        "credentials": {
+          "xsappname": "myxsappname",
+          "handshake": {
+            "oa2": {
+              "clientid": "myid",
+              "clientsecret": "mysecret",
+              "tokenendpoint": "https://ias.host.com/oauth/token",
+              "granttype": "client_credentials"
+            },
+            "uri": "https://em-pubsub-broker.host.com/handshake"
+          },
+          "serviceinstanceid": "430d23f1-651c-4f96-80e4-0e48aff93822"
+        },
+        "syslog_drain_url": null,
+        "volume_mounts": []
+      }
+    ],
+    "user-provided": [
+      {
+        "label": "user-provided",
         "name": "advanced-event-mesh",
         "tags": [],
         "instance_guid": "515066ab-029d-4cdd-a116-a2c254633b6b",
@@ -12,16 +40,13 @@
         "credentials": {
           "vpn": "capservice",
           "authentication-service": {
-            "tokenendpoint": "https://my.host.com/oauth2/token",
+            "tokenendpoint": "https://ias.host.com/oauth2/token",
             "clientid": "myid",
             "clientsecret": "mysecret"
           },
           "endpoints": {
             "advanced-event-mesh": {
-              "uri": "https://my.other.host.com:943/SEMP/v2/config",
-              "always-requires-token": true,
-              "amqp_uri": "amqps://broker.host.com:5671",
-              "smf_uri": "wss://broker.host.com:443"
+              "uri": "https://broker.host.com"
             }
           }
         },
