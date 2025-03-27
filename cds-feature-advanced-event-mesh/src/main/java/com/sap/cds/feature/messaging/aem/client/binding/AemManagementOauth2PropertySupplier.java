@@ -10,11 +10,12 @@ import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguratio
 import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.utils.environment.ServiceBindingUtils;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
+import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultOAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 
-public class AemManagementOauth2PropertySupplier implements OAuth2PropertySupplier {
+public class AemManagementOauth2PropertySupplier extends DefaultOAuth2PropertySupplier {
 
 	private static boolean initialized = false;
 
@@ -33,6 +34,7 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 	}
 
 	public AemManagementOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
+		super(options);
 		this.binding = options.getServiceBinding();
 		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);

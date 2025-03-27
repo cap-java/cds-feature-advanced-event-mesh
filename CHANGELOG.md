@@ -26,7 +26,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
-## Diffs
-
-- [unreleased](https://github.com/cap-java/cds-feature-advanced-event-meshg/compare/v3.9.0...HEAD)
-- [3.9.0](https://github.com/cap-java/cds-feature-advanced-event-mesh/releases/tag/v3.9.0)

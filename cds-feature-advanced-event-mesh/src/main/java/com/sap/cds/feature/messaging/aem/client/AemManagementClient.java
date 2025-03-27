@@ -25,13 +25,13 @@ public class AemManagementClient extends RestClient {
 	private static final String API_QUEUE_NAME = API_BASE + "/queues/%s";
 	private static final String API_QUEUE_NAME_SUBSCRIPTION = API_BASE + "/queues/%s/subscriptions";
 
-	public static final String ATTR_EGRESS_ENABLED = "egressEnabled";
-	public static final String ATTR_INGRESS_ENABLED = "ingressEnabled";
-	public static final String ATTR_DEAD_MSG_QUEUE = "deadMsgQueue";
-	public static final String ATTR_PERMISSION = "permission";
-	public static final String ATTR_QUEUE_NAME = "queueName";
-	public static final String ATTR_SUBSCRIPTION_TOPIC = "subscriptionTopic";
-	public static final String VAL_CONSUME = "consume";
+	private static final String ATTR_EGRESS_ENABLED = "egressEnabled";
+	private static final String ATTR_INGRESS_ENABLED = "ingressEnabled";
+	public  static final String ATTR_DEAD_MSG_QUEUE = "deadMsgQueue";
+	private static final String ATTR_PERMISSION = "permission";
+	private static final String ATTR_QUEUE_NAME = "queueName";
+	private static final String ATTR_SUBSCRIPTION_TOPIC = "subscriptionTopic";
+	private static final String VAL_CONSUME = "consume";
 
 	private final AemEndpointView endpointView;
 	private final String vpn;
@@ -85,8 +85,7 @@ public class AemManagementClient extends RestClient {
 			attributes.put(ATTR_INGRESS_ENABLED, true);
 			attributes.put(ATTR_EGRESS_ENABLED, true);
 
-			ObjectNode data = mapper.convertValue(attributes, ObjectNode.class);
-			postRequest(uri(API_QUEUE, this.vpn), data);
+			postRequest(uri(API_QUEUE, this.vpn), attributes);
 		}
 	}
 
@@ -104,8 +103,7 @@ public class AemManagementClient extends RestClient {
 			logger.debug("Queue {} is not subscribed to topic {}, subscribing it", queue, topic);
 
 			Map<String, Object> attributes = Map.of(ATTR_SUBSCRIPTION_TOPIC, topic);
-			ObjectNode data = mapper.convertValue(attributes, ObjectNode.class);
-			postRequest(uri(API_QUEUE_NAME_SUBSCRIPTION, this.vpn, queue), data);
+			postRequest(uri(API_QUEUE_NAME_SUBSCRIPTION, this.vpn, queue), attributes);
 		}
 	}
 

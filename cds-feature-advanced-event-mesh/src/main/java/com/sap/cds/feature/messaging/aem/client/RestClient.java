@@ -1,5 +1,7 @@
 package com.sap.cds.feature.messaging.aem.client;
 
+import static org.apache.http.entity.ContentType.APPLICATION_JSON;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -10,7 +12,6 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -23,7 +24,6 @@ import com.sap.cloud.sdk.cloudplatform.connectivity.HttpClientAccessor;
 import com.sap.cloud.sdk.cloudplatform.connectivity.HttpDestination;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
-import com.sap.cloud.security.xsuaa.http.MediaType;
 
 class RestClient {
 
@@ -46,7 +46,7 @@ class RestClient {
 		}
 	}
 
-	public JsonNode postRequest(String path, JsonNode data) throws IOException {
+	public JsonNode postRequest(String path, Map<String, Object>  data) throws IOException {
 		String strData = mapper.writer().writeValueAsString(data);
 		return postRequest(path, strData, null);
 	}
@@ -58,11 +58,11 @@ class RestClient {
 			headers.forEach((k, v) -> post.setHeader(k, v.toString()));
 		}
 
-		post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON.toString());
-		post.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON.toString());
+		post.setHeader(HttpHeaders.CONTENT_TYPE, APPLICATION_JSON.toString());
+		post.setHeader(HttpHeaders.ACCEPT, APPLICATION_JSON.toString());
 
 		if (data != null) {
-			post.setEntity(new StringEntity(data, ContentType.APPLICATION_JSON));
+			post.setEntity(new StringEntity(data, APPLICATION_JSON));
 		}
 		try {
 			return handleJsonResponse(handleRequest(post));
@@ -92,13 +92,13 @@ class RestClient {
 			logger.debug("Responded with status code '{}'", code);
 
 			if (code >= 200 && code <= 207) {
-				String contentType = MediaType.APPLICATION_JSON.value();
+				String contentType = APPLICATION_JSON.toString();
 
 				if (resp.getEntity() != null) {
 					if (resp.getEntity().getContentType() != null) {
 						contentType = resp.getEntity().getContentType().getValue();
 					}
-					if (contentType.startsWith(MediaType.APPLICATION_JSON.value())) {
+					if (contentType.startsWith(APPLICATION_JSON.toString())) {
 						String jsonData = EntityUtils.toString(resp.getEntity());
 						return mapper.readValue(jsonData, JsonNode.class);
 					} else {
