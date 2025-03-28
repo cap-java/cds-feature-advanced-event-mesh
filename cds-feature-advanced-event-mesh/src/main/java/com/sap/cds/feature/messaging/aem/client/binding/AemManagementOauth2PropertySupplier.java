@@ -11,7 +11,6 @@ import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.utils.environment.ServiceBindingUtils;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultOAuth2PropertySupplier;
-import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 

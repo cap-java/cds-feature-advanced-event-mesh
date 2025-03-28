@@ -3,7 +3,6 @@ package com.sap.cds.feature.messaging.aem.service;
 import static com.sap.cds.services.messaging.utils.MessagingOutboxUtils.outboxed;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;

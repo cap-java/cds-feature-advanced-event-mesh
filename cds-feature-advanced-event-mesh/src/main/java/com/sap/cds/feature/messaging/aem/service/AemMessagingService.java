@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import org.apache.qpid.jms.message.JmsBytesMessage;
