@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
 import com.sap.cds.services.ServiceException;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
@@ -20,7 +19,7 @@ import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOpt
 public class AemManagementClient extends RestClient {
 	private static final Logger logger = LoggerFactory.getLogger(AemManagementClient.class);
 
-	private static final String API_BASE = "/msgVpns/%s";
+	private static final String API_BASE = "/SEMP/v2/config/msgVpns/%s";
 	private static final String API_QUEUE = API_BASE + "/queues";
 	private static final String API_QUEUE_NAME = API_BASE + "/queues/%s";
 	private static final String API_QUEUE_NAME_SUBSCRIPTION = API_BASE + "/queues/%s/subscriptions";
