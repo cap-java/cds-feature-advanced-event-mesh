@@ -46,7 +46,8 @@
           },
           "endpoints": {
             "advanced-event-mesh": {
-              "uri": "https://broker.host.com"
+              "uri": "https://broker.host.com:123",
+              "amqp_uri": "amqps://broker.host.com:456"
             }
           }
         },
