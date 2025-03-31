@@ -47,7 +47,7 @@ public class AemAuthenticationServiceView {
 	 *         otherwise an empty {@link Optional}.
 	 */
 	public Optional<String> getTokenEndpoint() {
-		return Optional.ofNullable((String) this.getAuthorizationService().get(TOKENENDPOINT_KEY));
+		return Optional.ofNullable((String) this.getAuthenticationService().get(TOKENENDPOINT_KEY));
 	}
 
 	/**
@@ -57,7 +57,7 @@ public class AemAuthenticationServiceView {
 	 *         empty {@link Optional}
 	 */
 	public Optional<String> getClientId() {
-		return Optional.ofNullable((String) this.getAuthorizationService().get(CLIENTID_KEY));
+		return Optional.ofNullable((String) this.getAuthenticationService().get(CLIENTID_KEY));
 	}
 
 	/**
@@ -67,6 +67,6 @@ public class AemAuthenticationServiceView {
 	 *         otherwise an empty {@link Optional}
 	 */
 	public Optional<String> getClientSecret() {
-		return Optional.ofNullable((String) this.getAuthorizationService().get(CLIENTSECRET_KEY));
+		return Optional.ofNullable((String) this.getAuthenticationService().get(CLIENTSECRET_KEY));
 	}
 }
