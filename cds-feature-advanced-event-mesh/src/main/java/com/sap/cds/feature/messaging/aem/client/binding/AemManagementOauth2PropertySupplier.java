@@ -2,7 +2,6 @@ package com.sap.cds.feature.messaging.aem.client.binding;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Optional;
 
 import javax.annotation.Nonnull;
 
