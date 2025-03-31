@@ -22,7 +22,7 @@ public class AemAuthenticationServiceView {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> getAuthorizationService() {
+	private Map<String, Object> getAuthenticationService() {
 		if (binding.getCredentials().containsKey(AUTHENTICATION_SERVICE_KEY)) {
 			return (Map<String, Object>) binding.getCredentials().get(AUTHENTICATION_SERVICE_KEY);
 		} else {
