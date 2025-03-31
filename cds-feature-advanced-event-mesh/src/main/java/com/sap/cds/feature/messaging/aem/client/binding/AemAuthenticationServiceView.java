@@ -6,7 +6,7 @@ import java.util.Optional;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 
 /**
- * AemAuthorizationServiceView provides a view of the authorization service
+ * AemAuthenticationServiceView provides a view of the authentication service
  * credentials from a given ServiceBinding.
  */
 public class AemAuthenticationServiceView {
