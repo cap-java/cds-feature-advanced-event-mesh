@@ -1,5 +1,6 @@
 package com.sap.cds.feature.messaging.aem.service;
 
+import static com.sap.cds.services.outbox.OutboxService.unboxed;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import com.sap.cds.services.Service;
 import com.sap.cds.services.environment.CdsProperties;
 import com.sap.cds.services.environment.CdsProperties.Messaging.MessagingServiceConfig;
 import com.sap.cds.services.impl.environment.SimplePropertiesProvider;
@@ -27,7 +29,7 @@ public class AemMessagingServiceConfigurationTest {
 		List<AemMessagingService> services = configurer.getCdsRuntime().getServiceCatalog().getServices(AemMessagingService.class).toList();
 
 		assertEquals(1, services.size());
-		assertEquals("advanced-event-mesh", services.get(0).getName());
+		assertEquals("my-aem-instance", services.get(0).getName());
 	}
 
 	@Test
@@ -60,21 +62,21 @@ public class AemMessagingServiceConfigurationTest {
 		configurer.serviceConfigurations();
 		configurer.eventHandlerConfigurations();
 
-		List<AemMessagingService> services = configurer.getCdsRuntime().getServiceCatalog().getServices(AemMessagingService.class).collect(Collectors.toList());
+		List<Service> services = configurer.getCdsRuntime().getServiceCatalog().getServices().filter(srv -> unboxed(srv).getClass().equals(AemMessagingService.class)).toList();
 
 		assertEquals(1, services.size());
-		assertEquals("cfg", services.get(0).getName());
+		assertEquals("my-aem-instance", services.get(0).getName());
 	}
 
 	@Test
 	void testMultipleServiceConfigurations() {
 		CdsProperties properties = new CdsProperties();
 		MessagingServiceConfig config1 = new MessagingServiceConfig("cfg1");
-		config1.setBinding("advanced-event-mesh");
+		config1.setBinding("my-aem-instance");
 		config1.getOutbox().setEnabled(false);
 
 		MessagingServiceConfig config2 = new MessagingServiceConfig("cfg2");
-		config2.setBinding("advanced-event-mesh");
+		config2.setBinding("my-aem-instance");
 		config2.getOutbox().setEnabled(false);
 
 		properties.getMessaging().getServices().put(config1.getName(), config1);

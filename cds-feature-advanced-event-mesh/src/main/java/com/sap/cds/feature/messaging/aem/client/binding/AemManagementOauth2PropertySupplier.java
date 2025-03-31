@@ -8,13 +8,12 @@ import javax.annotation.Nonnull;
 
 import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguration;
 import com.sap.cds.services.ServiceException;
-import com.sap.cds.services.utils.environment.ServiceBindingUtils;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
-import com.sap.cloud.sdk.cloudplatform.connectivity.DefaultOAuth2PropertySupplier;
+import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 
-public class AemManagementOauth2PropertySupplier extends DefaultOAuth2PropertySupplier {
+public class AemManagementOauth2PropertySupplier implements OAuth2PropertySupplier {
 
 	private static boolean initialized = false;
 
@@ -25,15 +24,15 @@ public class AemManagementOauth2PropertySupplier extends DefaultOAuth2PropertySu
 	public static synchronized void initialize() {
 		if (!initialized) {
 			OAuth2ServiceBindingDestinationLoader.registerPropertySupplier(
-					options -> ServiceBindingUtils.matches(options.getServiceBinding(),
-							AemMessagingServiceConfiguration.BINDING_AEM_LABEL),
+					options -> (options.getServiceBinding().getName().isPresent() &&
+							AemMessagingServiceConfiguration.BINDING_AEM_LABEL.equals(options.getServiceBinding().getName().get()))
+					|| options.getServiceBinding().getTags().contains(AemMessagingServiceConfiguration.BINDING_AEM_LABEL),
 					AemManagementOauth2PropertySupplier::new);
 			initialized = true;
 		}
 	}
 
 	public AemManagementOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
-		super(options);
 		this.binding = options.getServiceBinding();
 		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
 		this.endpointView = new AemEndpointView(binding);
@@ -75,9 +74,9 @@ public class AemManagementOauth2PropertySupplier extends DefaultOAuth2PropertySu
 	}
 
 	private boolean isAemBinding(ServiceBinding binding) {
-		Optional<String> serviceName = binding.getName();
-
-		return serviceName.map(name -> name.equals(AemMessagingServiceConfiguration.BINDING_AEM_LABEL)).orElse(false);
+		return (binding.getName().isPresent() &&
+				AemMessagingServiceConfiguration.BINDING_AEM_LABEL.equals(binding.getName().get()))
+				|| binding.getTags().contains(AemMessagingServiceConfiguration.BINDING_AEM_LABEL);
 	}
 
 	private boolean areOAuth2ParametersPresent(ServiceBinding binding) {

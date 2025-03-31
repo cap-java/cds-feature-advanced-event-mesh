@@ -37,7 +37,8 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
 
 		Messaging config = configurer.getCdsRuntime().getEnvironment().getCdsProperties().getMessaging();
 		List<ServiceBinding> bindings = configurer.getCdsRuntime().getEnvironment().getServiceBindings()
-				.filter(binding -> ServiceBindingUtils.matches(binding, BINDING_AEM_LABEL))
+				.filter(binding -> (binding.getName().isPresent() && BINDING_AEM_LABEL.equals(binding.getName().get()))
+						|| binding.getTags().contains(BINDING_AEM_LABEL))
 				.toList();
 		Optional<ServiceBinding> validationBinding = configurer.getCdsRuntime().getEnvironment().getServiceBindings()
 				.filter(binding -> ServiceBindingUtils.matches(binding, BINDING_AEM_VALIDATION_LABEL)).findFirst();
