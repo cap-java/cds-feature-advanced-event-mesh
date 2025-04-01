@@ -34,13 +34,11 @@ public class AemManagementClient extends RestClient {
 
 	private final AemEndpointView endpointView;
 	private final String vpn;
-	private final String owner;
 
 	public AemManagementClient(ServiceBinding binding) {
 		super(ServiceBindingDestinationOptions.forService(binding).build());
 		this.endpointView = new AemEndpointView(binding);
 		this.vpn = getVpn();
-		this.owner = getOwner();
 	}
 
 	public String getEndpoint() {
@@ -136,10 +134,6 @@ public class AemManagementClient extends RestClient {
 
 	private String getVpn() {
 		return this.endpointView.getVpn().get();
-	}
-
-	private String getOwner() {
-		return getVpn()	;
 	}
 
 }
