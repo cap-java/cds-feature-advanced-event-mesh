@@ -1,4 +1,6 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/cap-java/cds-feature-advanced-event-mesh)](https://api.reuse.software/info/github.com/cap-java/cds-feature-advanced-event-mesh)
+[![Main build and deploy](https://github.com/cap-java/cds-feature-advanced-event-mesh/actions/workflows/main-build.yml/badge.svg)](https://github.com/cap-java/cds-feature-advanced-event-mesh/actions/workflows/main-build.yml)
+[![Deploy to Artifactory](https://github.com/cap-java/cds-feature-advanced-event-mesh/actions/workflows/main-build-and-deploy.yml/badge.svg)](https://github.com/cap-java/cds-feature-advanced-event-mesh/actions/workflows/main-build-and-deploy.yml)
 
 # cds-feature-advanced-event-mesh
 
