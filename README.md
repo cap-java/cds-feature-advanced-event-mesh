@@ -12,7 +12,7 @@ See [Getting Started](https://cap.cloud.sap/docs/get-started/in-a-nutshell?impl-
 
 ### SAP Integration Suite, Advanced Event Mesh
 
-For details on how to use SAP Integration Suite, advanced event mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide](https://help.sap.com/docs/sap-integration-suite/sap-integration-suite-advanced-event-mesh-728c56cd25854f0fad611eb26ae17152/what-is-sap-integration-suite-advanced-event-mesh?state=DRAFT).
+For details on how to use SAP Integration Suite, advanced event mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide]([https://help.sap.com/docs/sap-integration-suite/sap-integration-suite-advanced-event-mesh-728c56cd25854f0fad611eb26ae17152/what-is-sap-integration-suite-advanced-event-mesh?state=DRAFT](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh)).
 
 ### CDS Plugin
 
