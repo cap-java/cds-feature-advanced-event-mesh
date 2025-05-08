@@ -1,10 +1,5 @@
 package com.sap.cds.feature.messaging.aem.client.binding;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.Optional;
-
 import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguration;
 import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.utils.environment.ServiceBindingUtils;
@@ -12,12 +7,20 @@ import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import com.sap.cloud.security.config.ClientIdentity;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.Optional;
 
 public class AemValidationOAuth2PropertySupplier implements OAuth2PropertySupplier {
 
 	private static boolean initialized = false;
 
 	private final CredentialsView credentialsView;
+
+	protected AemValidationOAuth2PropertySupplier(ServiceBindingDestinationOptions options) {
+		this.credentialsView = new CredentialsView(options.getServiceBinding().getCredentials());
+	}
 
 	public static synchronized void initialize() {
 		if (!initialized) {
@@ -26,10 +29,6 @@ public class AemValidationOAuth2PropertySupplier implements OAuth2PropertySuppli
 					AemValidationOAuth2PropertySupplier::new);
 			initialized = true;
 		}
-	}
-
-	protected AemValidationOAuth2PropertySupplier(ServiceBindingDestinationOptions options) {
-		this.credentialsView = new CredentialsView(options.getServiceBinding().getCredentials());
 	}
 
 	@Override

@@ -1,11 +1,10 @@
 package com.sap.cds.feature.messaging.aem.client.binding;
 
+import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguration;
+import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-
-import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguration;
-import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 
 /**
  * AemEndpointView is a class that provides access to the AMQP URI and URI of an

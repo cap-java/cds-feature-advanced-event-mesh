@@ -1,16 +1,14 @@
 package com.sap.cds.feature.messaging.aem.client.binding;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import javax.annotation.Nonnull;
-
 import com.sap.cds.feature.messaging.aem.service.AemMessagingServiceConfiguration;
 import com.sap.cds.services.ServiceException;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2PropertySupplier;
 import com.sap.cloud.sdk.cloudplatform.connectivity.OAuth2ServiceBindingDestinationLoader;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
+import java.net.URI;
+import java.net.URISyntaxException;
+import javax.annotation.Nonnull;
 
 public class AemManagementOauth2PropertySupplier implements OAuth2PropertySupplier {
 
@@ -19,6 +17,12 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 	private final ServiceBinding binding;
 	private final AemAuthenticationServiceView authenticationServiceView;
 	private final AemEndpointView endpointView;
+
+	public AemManagementOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
+		this.binding = options.getServiceBinding();
+		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
+		this.endpointView = new AemEndpointView(binding);
+	}
 
 	public static synchronized void initialize() {
 		if (!initialized) {
@@ -29,12 +33,6 @@ public class AemManagementOauth2PropertySupplier implements OAuth2PropertySuppli
 					AemManagementOauth2PropertySupplier::new);
 			initialized = true;
 		}
-	}
-
-	public AemManagementOauth2PropertySupplier(@Nonnull ServiceBindingDestinationOptions options) {
-		this.binding = options.getServiceBinding();
-		this.authenticationServiceView = new AemAuthenticationServiceView(binding);
-		this.endpointView = new AemEndpointView(binding);
 	}
 
 	@Override
