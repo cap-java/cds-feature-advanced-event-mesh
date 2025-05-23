@@ -4,17 +4,18 @@
 
 # cds-feature-advanced-event-mesh
 
+
+
 ## About this project
 
 CDS plugin providing integration with SAP Integration Suite, Advanced Event Mesh.
+
+
 
 ## Requirements and Setup
 
 See [Getting Started](https://cap.cloud.sap/docs/get-started/in-a-nutshell?impl-variant=java) on how to jumpstart your development and grow as you go with SAP Cloud Application Programming Model.
 
-### SAP Integration Suite, Advanced Event Mesh
-
-For details on how to use SAP Integration Suite, Advanced Event Mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh).
 
 ### CDS Plugin
 
@@ -30,17 +31,36 @@ The usage of CAP Java plugins is described in the [CAP Java Documentation](https
 
 The latest version can be found in the [changelog](./CHANGELOG.md) or in the [Maven Central Repository](https://central.sonatype.com/artifact/com.sap.cds/cds-feature-advanced-event-mesh/versions).
 
+
+### WHAT ABOUT THE MESSAGING KIND?
+
+
+### COPY OUTCOME OF https://github.com/cap-js/advanced-event-mesh/pull/32
+
+
+### SAP Integration Suite, Advanced Event Mesh
+
+For details on how to use SAP Integration Suite, Advanced Event Mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh).
+
+
+
 ## Support, Feedback, Contributing
 
 This project is open to feature requests/suggestions, bug reports etc. via [GitHub issues](https://github.com/cap-java/cds-feature-advanced-event-mesh/issues). Contribution and feedback are encouraged and always welcome. For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
+
+
 
 ## Security / Disclosure
 
 If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/cap-java/cds-feature-advanced-event-mesh/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
 
+
+
 ## Code of Conduct
 
 We as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone. By participating in this project, you agree to abide by its [Code of Conduct](https://github.com/cap-java/.github/blob/main/CODE_OF_CONDUCT.md) at all times.
+
+
 
 ## Licensing
 
