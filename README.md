@@ -6,7 +6,7 @@
 
 ## About this project
 
-CDS plugin providing integration with SAP Integration Suite, advanced event mesh.
+CDS plugin providing integration with SAP Integration Suite, Advanced Event Mesh.
 
 ## Requirements and Setup
 
@@ -14,7 +14,7 @@ See [Getting Started](https://cap.cloud.sap/docs/get-started/in-a-nutshell?impl-
 
 ### SAP Integration Suite, Advanced Event Mesh
 
-For details on how to use SAP Integration Suite, advanced event mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh).
+For details on how to use SAP Integration Suite, Advanced Event Mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh).
 
 ### CDS Plugin
 
