@@ -38,8 +38,8 @@
   <version>${revision}</version>
   <packaging>pom</packaging>
 
-  <name>CDS plugin for SAP Integration Suite, advanced event mesh - Root</name>
-  <description>This artifact is a CAP Java plugin that provides out-of-the box integration with SAP Integration Suite, advanced event mesh.</description>
+  <name>CDS plugin for SAP Integration Suite, Advanced Event Mesh - Root</name>
+  <description>This artifact is a CAP Java plugin that provides out-of-the box integration with SAP Integration Suite, Advanced Event Mesh.</description>
   <url>https://cap.cloud.sap/docs/plugins/#advanced-event-mesh-plugin</url> <!-- TODO -->
 
   <modules>
