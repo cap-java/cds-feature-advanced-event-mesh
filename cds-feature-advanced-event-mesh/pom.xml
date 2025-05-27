@@ -11,7 +11,7 @@
   <artifactId>cds-feature-advanced-event-mesh</artifactId>
   <packaging>jar</packaging>
 
-  <name>CDS plugin for SAP Integration Suite, Advanced Event Mesh</name>
+  <name>CDS Plugin for SAP Integration Suite, Advanced Event Mesh</name>
   <url>https://cap.cloud.sap/docs/plugins/#advanced-event-mesh-plugin</url> <!-- TODO -->
 
   <dependencies>

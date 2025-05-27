@@ -8,7 +8,7 @@
 
 ## About this project
 
-CDS plugin providing integration with SAP Integration Suite, Advanced Event Mesh.
+CDS plugin providing integration with SAP Integration Suite, advanced event mesh.
 
 
 
@@ -40,7 +40,7 @@ The latest version can be found in the [changelog](./CHANGELOG.md) or in the [Ma
 
 ### SAP Integration Suite, Advanced Event Mesh
 
-For details on how to use SAP Integration Suite, Advanced Event Mesh, please see the [SAP Integration Suite, Advanced Event Mesh Service Guide](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh).
+For details on how to use SAP Integration Suite, advanced event mesh, please see the [SAP Integration Suite, advanced event mesh documentation](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/cap-plugin-for-sap-integration-suite-advanced-event-mesh).
 
 
 
