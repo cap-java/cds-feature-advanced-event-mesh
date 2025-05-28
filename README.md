@@ -87,9 +87,8 @@ Finally, the broker's credentials must be provided via a [user-provided service 
 }
 ```
 
-// TODO: adjust for CAP Java
-To troubleshoot connection issues, set log level for component `messaging` to `DEBUG`.
-Check [`cds.log()`](https://cap.cloud.sap/docs/node.js/cds-log) for how to maintain log levels.
+To troubleshoot connection issues, set log level for component `com.sap.cds.messaging` to `DEBUG`.
+Check [Operating CAP Java Applications → Observability](https://cap.cloud.sap/docs/java/operating-applications/observability) for how to maintain log levels.
 
 
 ### Broker Validation
