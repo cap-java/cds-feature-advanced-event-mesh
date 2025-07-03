@@ -52,6 +52,12 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
 
+    <!-- JSR305 implementation for annotations like @Nonnull, @CheckReturnValue, etc. -->
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+    </dependency>
+
     <!-- TEST DEPENDENCIES -->
     <dependency>
       <groupId>com.sap.cds</groupId>

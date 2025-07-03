@@ -31,6 +31,7 @@
     <cds.services.version>4.0.2</cds.services.version>
     <cds.install-cdsdk.version>8.7.3</cds.install-cdsdk.version>
     <qpid.version>2.7.0</qpid.version> <!-- https://central.sonatype.com/artifact/org.apache.qpid/qpid-jms-client/versions -->
+    <com.google.code.findbugs.jsr305.version>3.0.2</com.google.code.findbugs.jsr305.version>
   </properties>
 
   <groupId>com.sap.cds</groupId>
@@ -59,7 +60,7 @@
       <dependency>
         <groupId>com.sap.cloud.sdk</groupId>
         <artifactId>sdk-bom</artifactId>
-        <version>5.17.0</version>
+        <version>5.20.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -89,6 +90,13 @@
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
         <version>1.18.0</version>
+      </dependency>
+
+      <!-- JSR305 implementation for annotations like @Nonnull, @CheckReturnValue, etc. -->
+      <dependency>
+        <groupId>com.google.code.findbugs</groupId>
+        <artifactId>jsr305</artifactId>
+        <version>${com.google.code.findbugs.jsr305.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
