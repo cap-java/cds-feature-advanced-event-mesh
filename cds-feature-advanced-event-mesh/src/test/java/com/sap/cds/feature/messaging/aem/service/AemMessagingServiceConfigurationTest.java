@@ -2,12 +2,14 @@ package com.sap.cds.feature.messaging.aem.service;
 
 import static com.sap.cds.services.outbox.OutboxService.unboxed;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sap.cds.services.Service;
 import com.sap.cds.services.environment.CdsProperties;
 import com.sap.cds.services.environment.CdsProperties.Messaging.MessagingServiceConfig;
 import com.sap.cds.services.impl.environment.SimplePropertiesProvider;
+import com.sap.cds.services.outbox.OutboxService;
 import com.sap.cds.services.runtime.CdsRuntimeConfigurer;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -139,5 +141,88 @@ public class AemMessagingServiceConfigurationTest {
             .collect(Collectors.toList());
 
     assertTrue(services.isEmpty(), "Expected no services to be configured with invalid binding");
+  }
+
+  @Test
+  void testServiceConfigurationWithoutSkipManagementConfigured() {
+    CdsProperties properties = new CdsProperties();
+    MessagingServiceConfig config = new MessagingServiceConfig("cfg");
+    config.setBinding("my-aem-instance");
+    config.getOutbox().setEnabled(false);
+    properties.getMessaging().getServices().put(config.getName(), config);
+
+    CdsRuntimeConfigurer configurer =
+      CdsRuntimeConfigurer.create(new SimplePropertiesProvider(properties));
+
+    configurer.serviceConfigurations();
+    configurer.eventHandlerConfigurations();
+
+    List<AemMessagingService> services =
+      configurer
+        .getCdsRuntime()
+        .getServiceCatalog()
+        .getServices()
+        .map(OutboxService::unboxed)
+        .filter(srv -> srv.getClass().equals(AemMessagingService.class))
+        .map(srv -> (AemMessagingService) srv)
+        .toList();
+
+    assertFalse(services.stream().findFirst().get().getSkipManagement());
+  }
+
+  @Test
+  void testServiceConfigurationWithDisabledSkipManagement() {
+    CdsProperties properties = new CdsProperties();
+    MessagingServiceConfig config = new MessagingServiceConfig("cfg");
+    config.setBinding("my-aem-instance");
+    config.getOutbox().setEnabled(false);
+    config.getConnection().getProperties().put("skip-management", "false");
+    properties.getMessaging().getServices().put(config.getName(), config);
+
+    CdsRuntimeConfigurer configurer =
+      CdsRuntimeConfigurer.create(new SimplePropertiesProvider(properties));
+
+    configurer.serviceConfigurations();
+    configurer.eventHandlerConfigurations();
+
+    List<AemMessagingService> services =
+      configurer
+        .getCdsRuntime()
+        .getServiceCatalog()
+        .getServices()
+        .map(OutboxService::unboxed)
+        .filter(srv -> srv.getClass().equals(AemMessagingService.class))
+        .map(srv -> (AemMessagingService) srv)
+        .toList();
+
+    assertFalse(services.stream().findFirst().get().getSkipManagement());
+  }
+
+  @Test
+  void testServiceConfigurationWithEnabledSkipManagement() {
+    CdsProperties properties = new CdsProperties();
+    MessagingServiceConfig config = new MessagingServiceConfig("cfg");
+    config.setBinding("my-aem-instance");
+    config.getOutbox().setEnabled(false);
+    config.getConnection().getProperties().put("skipManagement", "true");
+    properties.getMessaging().getServices().put(config.getName(), config);
+
+    CdsRuntimeConfigurer configurer =
+      CdsRuntimeConfigurer.create(new SimplePropertiesProvider(properties));
+
+    configurer.serviceConfigurations();
+    configurer.eventHandlerConfigurations();
+
+    List<AemMessagingService> services =
+      configurer
+        .getCdsRuntime()
+        .getServiceCatalog()
+        .getServices()
+        .map(OutboxService::unboxed)
+        .filter(srv -> srv.getClass().equals(AemMessagingService.class))
+        .map(srv -> (AemMessagingService) srv)
+        .toList();
+
+    assertTrue(services.stream().findFirst().get().getSkipManagement());
   }
 }
