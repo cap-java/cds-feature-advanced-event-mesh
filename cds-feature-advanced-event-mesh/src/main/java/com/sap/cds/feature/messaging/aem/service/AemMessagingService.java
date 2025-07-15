@@ -2,6 +2,7 @@ package com.sap.cds.feature.messaging.aem.service;
 
 import static com.sap.cds.feature.messaging.aem.client.AemManagementClient.ATTR_DEAD_MSG_QUEUE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sap.cds.feature.messaging.aem.client.AemManagementClient;
 import com.sap.cds.feature.messaging.aem.client.AemValidationClient;
 import com.sap.cds.feature.messaging.aem.jms.AemMessagingConnectionProvider;
@@ -36,6 +37,7 @@ public class AemMessagingService extends AbstractMessagingService {
 
   private volatile BrokerConnection connection;
   private volatile Boolean aemBrokerValidated = false;
+  private volatile Boolean skipManagement = false;
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   protected AemMessagingService(
@@ -50,6 +52,16 @@ public class AemMessagingService extends AbstractMessagingService {
     this.connectionProvider = connectionProvider;
     this.managementClient = new AemManagementClient(binding);
     this.validationBinding = validationBinding;
+
+    Map<String, String> properties = serviceConfig.getConnection().getProperties();
+    String skipManagementProperty = properties.get("skipManagement");
+    String skip_ManagementProperty = properties.get("skip-management");
+    this.skipManagement = Boolean.parseBoolean(skipManagementProperty) || Boolean.parseBoolean(skip_ManagementProperty);
+  }
+
+  @VisibleForTesting
+  boolean getSkipManagement() {
+    return this.skipManagement;
   }
 
   @Override
@@ -83,11 +95,21 @@ public class AemMessagingService extends AbstractMessagingService {
 
   @Override
   protected void removeQueue(String name) throws IOException {
+    if (this.skipManagement) {
+      logger.debug("Skipping deletion of queue '{}', skipManagement = {}", name, this.skipManagement);
+      return;
+    }
+
     managementClient.removeQueue(name);
   }
 
   @Override
   protected void createQueue(String name, Map<String, Object> properties) throws IOException {
+    if (this.skipManagement) {
+      logger.debug("Skipping creation of queue '{}', skipManagement = {}", name, this.skipManagement);
+      return;
+    }
+
     if (properties.containsKey(ATTR_DEAD_MSG_QUEUE)) {
       String dmQueue = (String) properties.get(ATTR_DEAD_MSG_QUEUE);
       if (managementClient.getQueue(dmQueue) == null) {
@@ -99,6 +121,12 @@ public class AemMessagingService extends AbstractMessagingService {
 
   @Override
   protected void createQueueSubscription(String queue, String topic) throws IOException {
+    if (this.skipManagement) {
+      logger.debug("Skipping creation of queue subscription for queue '{}' and topic '{}', skipManagement = {}",
+          queue, topic, this.skipManagement);
+      return;
+    }
+
     managementClient.createQueueSubscription(queue, topic);
   }
 
