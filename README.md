@@ -97,6 +97,14 @@ Your app must be bound to an instance of service `SAP Integration Suite, advance
 Please see [Validation of VMR Provisioning](https://help.sap.com/docs/sap-integration-suite/advanced-event-mesh/validation-of-vmr-provisioning) for more information.
 
 
+### Additional Configuration Options
+
+Additional configuration options for the messaging service are:
+
+Property | Type | Description |
+ | --- | --- | --- |
+| `cds.messaging.services.<key>.connection.properties.skipManagement` | `boolean` | If set to `true`, the plugin will not create a queue or subscription. This is useful if you want to manage these resources manually, default: `false` |
+
 
 ## Support, Feedback, Contributing
 
