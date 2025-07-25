@@ -5,6 +5,7 @@ env:
   MAVEN_VERSION: '3.6.3'
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
 
