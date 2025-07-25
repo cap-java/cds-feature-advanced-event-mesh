@@ -5,8 +5,11 @@ env:
   MAVEN_VERSION: '3.6.3'
 
 on:
-  workflow_dispatch:
   push:
+    branches: [ "main" ]
+  # TODO: remove before merging
+  workflow_dispatch:
+  pull_request:
     branches: [ "main" ]
 
 jobs:
