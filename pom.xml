@@ -183,39 +183,17 @@
       <plugin>
         <artifactId>maven-gpg-plugin</artifactId>
         <version>3.2.8</version>
-        <!-- <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>deploy</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions> -->
       </plugin>
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
         <version>0.8.0</version>
         <extensions>true</extensions>
-        <!-- <configuration>
-          <publishingServerId>central</publishingServerId>
-        </configuration> -->
       </plugin>
     </plugins>
 
     <pluginManagement>
       <plugins>
-        <!-- <plugin>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>3.2.7</version>
-        </plugin> -->
-        <!-- <plugin>
-          <groupId>org.sonatype.central</groupId>
-          <artifactId>central-publishing-maven-plugin</artifactId>
-          <version>0.7.0</version>
-          <extensions>true</extensions>
-        </plugin> -->
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.5.0</version>
