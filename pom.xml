@@ -182,8 +182,8 @@
       </plugin>
       <plugin>
         <artifactId>maven-gpg-plugin</artifactId>
-        <version>3.2.7</version>
-        <executions>
+        <version>3.2.8</version>
+        <!-- <executions>
           <execution>
             <id>sign-artifacts</id>
             <phase>deploy</phase>
@@ -191,16 +191,16 @@
               <goal>sign</goal>
             </goals>
           </execution>
-        </executions>
+        </executions> -->
       </plugin>
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>0.7.0</version>
+        <version>0.8.0</version>
         <extensions>true</extensions>
-        <configuration>
+        <!-- <configuration>
           <publishingServerId>central</publishingServerId>
-        </configuration>
+        </configuration> -->
       </plugin>
     </plugins>
 
@@ -271,6 +271,35 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <profiles>
+    <profile>
+      <id>deploy-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <distributionManagement>
     <snapshotRepository>
