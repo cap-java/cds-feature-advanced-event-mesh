@@ -1,5 +1,6 @@
 package com.sap.cds.feature.messaging.aem.client;
 
+import com.google.common.base.Strings;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import java.io.IOException;
@@ -18,7 +19,7 @@ public class AemValidationClient extends RestClient {
     URI uri = new URI(managementUri);
     Map<String, String> payloadMap = new HashMap<>(Map.of("hostName", uri.getHost()));
 
-    if (subaccountId != null) {
+    if (!Strings.isNullOrEmpty(subaccountId)) {
       payloadMap.put("subaccountId", subaccountId);
     }
 
