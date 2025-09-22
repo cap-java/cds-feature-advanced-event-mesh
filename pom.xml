@@ -30,7 +30,7 @@
 
     <cds.services.version>4.1.1</cds.services.version>
     <cds.install-cdsdk.version>8.7.3</cds.install-cdsdk.version>
-    <qpid.version>2.7.0</qpid.version> <!-- https://central.sonatype.com/artifact/org.apache.qpid/qpid-jms-client/versions -->
+    <qpid.version>2.7.0</qpid.version>    <!-- https://central.sonatype.com/artifact/org.apache.qpid/qpid-jms-client/versions -->
     <com.google.code.findbugs.jsr305.version>3.0.2</com.google.code.findbugs.jsr305.version>
   </properties>
 
@@ -41,7 +41,7 @@
 
   <name>CDS Plugin for SAP Integration Suite, Advanced Event Mesh - Root</name>
   <description>This artifact is a CAP Java plugin that provides out-of-the box integration with SAP Integration Suite, advanced event mesh.</description>
-  <url>https://cap.cloud.sap/docs/plugins/#advanced-event-mesh-plugin</url> <!-- TODO -->
+  <url>https://cap.cloud.sap/docs/plugins/#advanced-event-mesh-plugin</url>  <!-- TODO -->
 
   <modules>
     <module>cds-feature-advanced-event-mesh</module>
@@ -89,7 +89,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.18.0</version>
+        <version>1.19.0</version>
       </dependency>
 
       <!-- JSR305 implementation for annotations like @Nonnull, @CheckReturnValue, etc. -->
@@ -110,7 +110,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.13.3</version>
+      <version>5.13.4</version>
       <scope>test</scope>
     </dependency>
 
@@ -130,11 +130,9 @@
 
   <build>
     <plugins>
-
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
-
       <!-- POM FLATTENING FOR CI FRIENDLY VERSIONS -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -160,7 +158,6 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <artifactId>maven-enforcer-plugin</artifactId>
         <executions>
@@ -183,7 +180,16 @@
           </execution>
         </executions>
       </plugin>
-
+      <plugin>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>3.2.8</version>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.8.0</version>
+        <extensions>true</extensions>
+      </plugin>
     </plugins>
 
     <pluginManagement>
@@ -218,7 +224,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.6.0</version>
+          <version>3.6.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -244,6 +250,35 @@
     </pluginManagement>
   </build>
 
+  <profiles>
+    <profile>
+      <id>deploy-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <distributionManagement>
     <snapshotRepository>
       <id>artifactory</id>
@@ -251,9 +286,9 @@
       <url>https://common.repositories.cloud.sap/artifactory/cap-java</url>
     </snapshotRepository>
     <repository>
-      <id>ossrh</id>
+      <id>central</id>
       <name>MavenCentral</name>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <url>https://central.sonatype.com</url>
     </repository>
   </distributionManagement>
 
@@ -263,4 +298,4 @@
     <developerConnection>scm:git:git@github.com:cap-java/cds-feature-advanced-event-mesh.git</developerConnection>
   </scm>
 
- </project>
+</project>
