@@ -101,9 +101,10 @@ Please see [Validation of VMR Provisioning](https://help.sap.com/docs/sap-integr
 
 Additional configuration options for the messaging service are:
 
-Property | Type | Description |
- | --- | --- | --- |
+ Property                                                            | Type      | Description                                                                                                                                           |
+ |---------------------------------------------------------------------|-----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `cds.messaging.services.<key>.connection.properties.skipManagement` | `boolean` | If set to `true`, the plugin will not create a queue or subscription. This is useful if you want to manage these resources manually, default: `false` |
+| `cds.messaging.services.<key>.connection.properties.subaccountId`   | `String`  | If set to a subaccount ID, the plugin will call the validation service with that given value, default: `null`                                         |
 
 
 ## Support, Feedback, Contributing
