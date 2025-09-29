@@ -38,6 +38,7 @@ public class AemMessagingService extends AbstractMessagingService {
   private volatile BrokerConnection connection;
   private volatile Boolean aemBrokerValidated = false;
   private volatile Boolean skipManagement = false;
+  private volatile String subaccountId = null;
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   protected AemMessagingService(
@@ -57,6 +58,9 @@ public class AemMessagingService extends AbstractMessagingService {
     String skipManagementProperty = properties.get("skipManagement");
     String skip_ManagementProperty = properties.get("skip-management");
     this.skipManagement = Boolean.parseBoolean(skipManagementProperty) || Boolean.parseBoolean(skip_ManagementProperty);
+    String subaccountId = properties.getOrDefault("subaccountId", null);
+    String subaccount_Id = properties.getOrDefault("subaccount-id", null);
+    this.subaccountId = subaccountId != null ? subaccountId : subaccount_Id;
   }
 
   @VisibleForTesting
@@ -163,7 +167,7 @@ public class AemMessagingService extends AbstractMessagingService {
       AemValidationClient validationClient = new AemValidationClient(this.validationBinding);
 
       try {
-        validationClient.validate(endpoint);
+        validationClient.validate(endpoint, this.subaccountId);
         this.aemBrokerValidated = true;
       } catch (IOException | URISyntaxException e) {
         throw new ServiceException("Failed to validate the AEM endpoint.", e);
