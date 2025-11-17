@@ -110,7 +110,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>6.0.0</version>
+      <version>6.0.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -239,7 +239,7 @@
         <plugin>
           <groupId>org.pitest</groupId>
           <artifactId>pitest-maven</artifactId>
-          <version>1.21.0</version>
+          <version>1.21.1</version>
         </plugin>
         <plugin>
           <groupId>com.github.spotbugs</groupId>
