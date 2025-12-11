@@ -28,7 +28,7 @@
     <maven.compiler.release>${java.version}</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <cds.services.version>4.4.2</cds.services.version>
+    <cds.services.version>4.5.1</cds.services.version>
     <cds.install-cdsdk.version>8.7.3</cds.install-cdsdk.version>
     <qpid.version>2.9.0</qpid.version>    <!-- https://central.sonatype.com/artifact/org.apache.qpid/qpid-jms-client/versions -->
     <com.google.code.findbugs.jsr305.version>3.0.2</com.google.code.findbugs.jsr305.version>
