@@ -68,7 +68,7 @@
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-bom</artifactId>
-        <version>5.20.0</version>
+        <version>5.21.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -204,7 +204,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.3.1</version>
+          <version>3.4.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -239,12 +239,12 @@
         <plugin>
           <groupId>org.pitest</groupId>
           <artifactId>pitest-maven</artifactId>
-          <version>1.21.1</version>
+          <version>1.22.0</version>
         </plugin>
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.9.8.1</version>
+          <version>4.9.8.2</version>
         </plugin>
       </plugins>
     </pluginManagement>
