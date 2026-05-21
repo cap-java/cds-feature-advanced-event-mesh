@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: Release
     #needs: [blackduck, build]
-    needs: [build. requires-approval]
+    needs: [build, requires-approval]
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v7
