@@ -9,19 +9,45 @@ on:
     types: [ "released" ]
 
 jobs:
-  #blackduck:
-  #  name: Blackduck Scan
-  #  runs-on: ubuntu-latest
-  #  timeout-minutes: 15
-  #  steps:
-  #    - name: Checkout
-  #      uses: actions/checkout@v6
-  #    - name: Scan With Black Duck
-  #      uses: ./.github/actions/scan-with-blackduck
-  #      with:
-  #        blackduck_token: ${{ secrets.BLACK_DUCK_TOKEN }}
-  #        github_token: ${{ secrets.GITHUB_TOKEN }}
-  #        maven-version: ${{ env.MAVEN_VERSION }}
+  blackduck:
+    name: Blackduck Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Scan With Black Duck
+        uses: cap-java/.github/actions/scan-with-blackduck@main
+        with:
+          blackduck_token: ${{ secrets.BLACK_DUCK_TOKEN }}
+          maven-version: ${{ env.MAVEN_VERSION }}
+          project-name: com.sap.cds.feature.advanced-event-mesh
+          included-modules: cds-feature-advanced-event-mesh
+          scan_mode: FULL
+  codeql:
+    name: CodeQL Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Scan With CodeQL
+        continue-on-error: true
+        uses: cap-java/.github/actions/scan-with-codeql@main
+        with:
+          maven-version: ${{ env.MAVEN_VERSION }}
+          java-version: ${{ env.JAVA_VERSION }}
+          language: java-kotlin
+          queries: security-extended
 
   #update-version:
   #  name: Update Version
@@ -99,13 +125,13 @@ jobs:
         with:
           name: root-build
       - name: Deploy
-        uses: ./.github/actions/deploy-release
+        uses: cap-java/.github/actions/deploy-release@main
         with:
           user: ${{ secrets.CAP_JAVA_CDS_FEATURE_ADVANCED_EVENT_MESH_USER }}
           password: ${{ secrets.CAP_JAVA_CDS_FEATURE_ADVANCED_EVENT_MESH_PASS }}
-          pgp-pub-key: ${{ secrets.PGP_PUBKEY_ID_AEM }}
-          pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY_AEM }}
-          pgp-passphrase: ${{ secrets.PGP_PASSPHRASE_AEM }}
+          gpg-pub-key: ${{ secrets.PGP_PUBKEY_ID_AEM }}
+          gpg-private-key: ${{ secrets.PGP_PRIVATE_KEY_AEM }}
+          gpg-passphrase: ${{ secrets.PGP_PASSPHRASE_AEM }}
           revision: ${{ github.event.release.tag_name }}
           maven-version: ${{ env.MAVEN_VERSION }}
       - name: Echo Status
