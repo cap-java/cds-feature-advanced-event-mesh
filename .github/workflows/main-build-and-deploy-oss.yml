@@ -23,37 +23,50 @@ jobs:
   #        github_token: ${{ secrets.GITHUB_TOKEN }}
   #        maven-version: ${{ env.MAVEN_VERSION }}
 
-  update-version:
-    name: Update Version
+  #update-version:
+  #  name: Update Version
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - name: Checkout
+  #      uses: actions/checkout@v6
+  #      with:
+  #        token: ${{ secrets.GH_TOKEN }}
+  #    - name: Update version
+  #      uses: ./.github/actions/newrelease
+  #      with:
+  #        java-version: ${{ env.JAVA_VERSION }}
+  #        maven-version: ${{ env.MAVEN_VERSION }}
+  #    - name: Upload Changed Artifacts
+  #      uses: actions/upload-artifact@v7
+  #      with:
+  #        name: root-new-version
+  #        path: .
+  #        include-hidden-files: true
+  #        retention-days: 1
+
+  requires-approval:
     runs-on: ubuntu-latest
+    name: "Waiting for release approval"
+    environment: Release-Approval
+    permissions:
+      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-      - name: Update version
-        uses: ./.github/actions/newrelease
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          maven-version: ${{ env.MAVEN_VERSION }}
-      - name: Upload Changed Artifacts
-        uses: actions/upload-artifact@v6
-        with:
-          name: root-new-version
-          path: .
-          include-hidden-files: true
-          retention-days: 1
+      - name: Approval Step
+        run: echo "Release has been approved!"
 
   build:
     #name: Build and Sonar Scan
     name: Build
     runs-on: ubuntu-latest
-    needs: update-version
+    needs: requires-approval
+    #needs: update-version
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: root-new-version
+      - name: Checkout
+        uses: actions/checkout@v6
+      #- name: Download artifact
+      #  uses: actions/download-artifact@v8
+      #  with:
+      #    name: root-new-version
       - name: Build
         uses: ./.github/actions/build
         with:
@@ -67,7 +80,7 @@ jobs:
       #    sonarq-token: ${{ secrets.SONARQ_TOKEN }}
       #    github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Changed Artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: root-build
           include-hidden-files: true
@@ -77,21 +90,22 @@ jobs:
   deploy:
     name: Deploy to Maven Central
     runs-on: ubuntu-latest
+    environment: Release
     #needs: [blackduck, build]
     needs: [build]
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: root-build
       - name: Deploy
         uses: ./.github/actions/deploy-release
         with:
-          user: ${{ secrets.CENTRAL_REPOSITORY_USER }}
-          password: ${{ secrets.CENTRAL_REPOSITORY_PASS }}
-          pgp-pub-key: ${{ secrets.PGP_PUBKEY_ID }}
-          pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY }}
-          pgp-passphrase: ${{ secrets.PGP_PASSPHRASE }}
+          user: ${{ secrets.CAP_JAVA_CDS_FEATURE_ADVANCED_EVENT_MESH_USER }}
+          password: ${{ secrets.CAP_JAVA_CDS_FEATURE_ADVANCED_EVENT_MESH_PASS }}
+          pgp-pub-key: ${{ secrets.PGP_PUBKEY_ID_AEM }}
+          pgp-private-key: ${{ secrets.PGP_PRIVATE_KEY_AEM }}
+          pgp-passphrase: ${{ secrets.PGP_PASSPHRASE_AEM }}
           revision: ${{ github.event.release.tag_name }}
           maven-version: ${{ env.MAVEN_VERSION }}
       - name: Echo Status
