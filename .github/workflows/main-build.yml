@@ -51,7 +51,7 @@ jobs:
           maven-version: ${{ env.MAVEN_VERSION }}
           project-name: com.sap.cds.feature.advanced-event-mesh
           included-modules: cds-feature-advanced-event-mesh
-          scan_mode: FULL
+          scan_mode: RAPID # Change to FULL, once there is a project for cds-feature-advanced-event-mesh on sap.blackducksoftware.com
   codeql:
     name: CodeQL Scan
     runs-on: ubuntu-latest

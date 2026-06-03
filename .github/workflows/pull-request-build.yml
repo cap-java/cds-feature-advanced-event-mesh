@@ -28,7 +28,8 @@ jobs:
           project-name: com.sap.cds.feature.advanced-event-mesh
           included-modules: cds-feature-advanced-event-mesh
           scan_mode: RAPID
-          rapid_compare_mode: BOM_COMPARE # PRs might only be blocked by things they introduce, not by pre-existing issues that could have appeared in the main branch in the meantime
+          # Use rapid_compare_mode: BOM_COMPARE, once there is a project for cds-feature-advanced-event-mesh on sap.blackducksoftware.com
+          #rapid_compare_mode: BOM_COMPARE # PRs might only be blocked by things they introduce, not by pre-existing issues that could have appeared in the main branch in the meantime
 
   build:
 
