@@ -37,7 +37,7 @@ jobs:
   #        java-version: ${{ env.JAVA_VERSION }}
   #        maven-version: ${{ env.MAVEN_VERSION }}
   #    - name: Upload Changed Artifacts
-  #      uses: actions/upload-artifact@v6
+  #      uses: actions/upload-artifact@v7
   #      with:
   #        name: root-new-version
   #        path: .
@@ -64,7 +64,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       #- name: Download artifact
-      #  uses: actions/download-artifact@v7
+      #  uses: actions/download-artifact@v8
       #  with:
       #    name: root-new-version
       - name: Build
@@ -80,7 +80,7 @@ jobs:
       #    sonarq-token: ${{ secrets.SONARQ_TOKEN }}
       #    github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Changed Artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: root-build
           include-hidden-files: true
@@ -95,7 +95,7 @@ jobs:
     needs: [build]
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: root-build
       - name: Deploy
