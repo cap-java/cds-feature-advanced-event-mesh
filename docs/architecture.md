@@ -59,7 +59,7 @@ The single SPI registration is in `META-INF/services/com.sap.cds.services.runtim
 `AemMessagingServiceConfiguration.services()` (line 32) is called by `CdsRuntimeConfigurer`:
 
 1. **Register OAuth2 property suppliers** with the SAP Cloud SDK destination loader so any HTTP destination built from an AEM binding automatically does the OAuth2 client-credentials dance. There are *two* suppliers because management and validation use different OAuth2 servers (one in IAS, one in BTP/XSUAA).
-2. **Find bindings**: any service binding named `advanced-event-mesh` *or* tagged with that label, plus one binding for `aem-validation-service`. Validation binding is mandatory — without it, `createMessagingService` throws.
+2. **Find bindings**: any service binding named `advanced-event-mesh` *or* tagged with that label, plus one binding for `aem-validation-service`. The validation binding is mandatory when at least one AEM broker binding is present — `createMessagingService` (called per binding, line 159) throws a `ServiceException` if it is absent. If there are no AEM broker bindings the missing validation binding is silently ignored.
 3. **Per AEM binding**, decide which `MessagingServiceConfig`(s) to materialize:
    - explicit `cds.messaging.services` entries that match by binding name,
    - then by `kind: aem` / `kind: advanced-event-mesh` (only when there's exactly one binding — to avoid ambiguity),
@@ -133,14 +133,14 @@ Token refresh for AMQP relies entirely on the SAP Cloud SDK's destination-side O
 
 `AbstractMessagingService` needs to map an inbound message back to a CAP topic name to dispatch the right event handler. The location of "the topic name" in the AMQP message is broker-specific:
 
-- AEM (Solace, raw AMQP) → `getMessageTopic` reads `AmqpJmsTextMessageFacade.getDestination().getAddress()` (line 156). The destination address *is* the topic.
-- EM (Solace via SAP Event Mesh) → reads `AmqpJmsTextMessageFacade.getType()` instead.
+- AEM (Solace, raw AMQP) → `getMessageTopic` reads `getDestination().getAddress()` from both `AmqpJmsTextMessageFacade` (text messages) and `AmqpJmsBytesMessageFacade` (binary messages) (lines 153–162). The destination address *is* the topic.
+- EM (Solace via SAP Event Mesh) → reads `.getType()` from the same facade types instead.
 
 The accessor is passed to `connection.registerQueueListener(queue, listener, this::getMessageTopic)` as a `TopicAccessor`, which `MessageQueueReader` uses on each delivered message.
 
 ### Outbound topic prefixing
 
-When emitting, AEM prefixes with `"topic://"` (line 146); EM prefixes with `"topic:"` (single colon). Trivial wire-format difference; both Solace-flavored.
+When emitting, AEM's `emitTopicMessage` (line 144) first calls `validate()` (line 145) then passes `"topic://" + topic` to the broker (line 146); EM passes `"topic:" + topic` (single colon). Trivial wire-format difference; both Solace-flavored.
 
 Notably, AEM does **not** override `toFullyQualifiedTopicName` or `toFullyQualifiedQueueName` like EM does. EM has a non-trivial namespace story (`$namespace` placeholders, `+/+/+/` wildcards for cross-tenant subscriptions, `.`→`/` translation for CloudEvents). AEM treats topics as opaque strings; multi-tenant fan-out and namespace conventions are the user's problem.
 
@@ -148,7 +148,7 @@ Notably, AEM does **not** override `toFullyQualifiedTopicName` or `toFullyQualif
 
 ## 8. Validation handshake
 
-`AemValidationClient.validate(managementUri, subaccountId)` POSTs `{hostName, subaccountId?}` to the validation service's handshake endpoint (the URI comes from `credentials.handshake.uri`). It runs at most once per service instance — guarded by the `aemBrokerValidated` volatile boolean in `AemMessagingService.validate()` (line 165), and only on the first publish (lazily via `emitTopicMessage`). A 200 confirms this BTP subaccount is entitled to this VMR. Anything else → `ServiceException`, no message is sent.
+`AemValidationClient.validate(managementUri, subaccountId)` POSTs `{"hostName": <host extracted from managementUri>, "subaccountId"?: ...}` to the validation service's handshake endpoint (the destination base URI from the validation binding). Only the *host* component of `managementUri` is sent, not the full URI. It runs at most once per service instance — guarded by the `aemBrokerValidated` volatile `Boolean` flag in `AemMessagingService.validate()` (line 165), and only on the first publish (lazily via `emitTopicMessage`). A 200 confirms this BTP subaccount is entitled to this VMR. Anything else → `ServiceException`, no message is sent.
 
 This is a compliance / anti-misconfiguration check: it prevents an app from being mistakenly bound to a broker in the wrong subaccount.
 
@@ -186,8 +186,9 @@ Both keys are also accepted in kebab-case (`skip-management`, `subaccount-id`).
 
 ## 11. Notes & caveats worth flagging
 
-- `AemEndpointView.getAemEndpoint()` (line 65) iterates `endpoints` map values and returns the *first* one. This works only because production bindings have exactly one entry keyed under `advanced-event-mesh`. Fragile if more endpoint entries get added at the same level.
+- `AemEndpointView.getAemEndpoint()` (line 65) takes the first value from the `endpoints` map via an iterator, then validates that the key `"advanced-event-mesh"` exists in the map. This is fragile: if a second entry is added to `endpoints` whose insertion order precedes `"advanced-event-mesh"`, the wrong endpoint value will be returned even though the key guard passes.
+- `aemBrokerValidated` is declared as a boxed `volatile Boolean` (not primitive `boolean`). The check-then-act pattern in `validate()` (lines 165–175) is not synchronized, so under concurrent calls to `emitTopicMessage` the validation can be invoked multiple times before the flag is set to `true`.
 - `getMessageTopic` returns `null` if it doesn't recognize the JMS message type. The `MessageQueueReader` then has to handle `null` — worth double-checking the failure path during audits.
 - Two duplicate property reads (`skipManagement` vs `skip-management`, `subaccountId` vs `subaccount-id`) — supports both naming conventions.
 - `AemValidationClient` posts to path `""` (empty string) because the destination URI itself is the full handshake URL — relies on Apache HttpClient resolving an empty string to the base URI.
-- The plugin requires *both* an AEM binding and a validation binding to start successfully; no graceful degradation if validation is missing.
+- The plugin requires a validation binding whenever at least one AEM broker binding is present; the missing binding causes a `ServiceException` at startup per affected service instance, not at deploy time.
