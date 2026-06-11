@@ -1,7 +1,9 @@
 package com.sap.cds.feature.messaging.aem.client;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
+import com.sap.cloud.sdk.cloudplatform.connectivity.HttpDestination;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import java.io.IOException;
 import java.net.URI;
@@ -13,6 +15,11 @@ public class AemValidationClient extends RestClient {
 
   public AemValidationClient(ServiceBinding binding) {
     super(ServiceBindingDestinationOptions.forService(binding).build());
+  }
+
+  @VisibleForTesting
+  AemValidationClient(HttpDestination destination) {
+    super(destination);
   }
 
   public void validate(String managementUri, String subaccountId) throws IOException, URISyntaxException {

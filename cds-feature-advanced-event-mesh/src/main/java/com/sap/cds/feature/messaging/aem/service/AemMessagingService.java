@@ -33,7 +33,7 @@ public class AemMessagingService extends AbstractMessagingService {
 
   private final AemMessagingConnectionProvider connectionProvider;
   private final AemManagementClient managementClient;
-  private final ServiceBinding validationBinding;
+  private final AemValidationClient validationClient;
 
   private volatile BrokerConnection connection;
   private volatile Boolean aemBrokerValidated = false;
@@ -52,7 +52,32 @@ public class AemMessagingService extends AbstractMessagingService {
 
     this.connectionProvider = connectionProvider;
     this.managementClient = new AemManagementClient(binding);
-    this.validationBinding = validationBinding;
+    this.validationClient = new AemValidationClient(validationBinding);
+
+    Map<String, String> properties = serviceConfig.getConnection().getProperties();
+    String skipManagementProperty = properties.get("skipManagement");
+    String skip_ManagementProperty = properties.get("skip-management");
+    this.skipManagement = Boolean.parseBoolean(skipManagementProperty) || Boolean.parseBoolean(skip_ManagementProperty);
+    String subaccountId = properties.getOrDefault("subaccountId", null);
+    String subaccount_Id = properties.getOrDefault("subaccount-id", null);
+    this.subaccountId = subaccountId != null ? subaccountId : subaccount_Id;
+  }
+
+  @VisibleForTesting
+  AemMessagingService(
+      MessagingServiceConfig serviceConfig,
+      AemMessagingConnectionProvider connectionProvider,
+      AemManagementClient managementClient,
+      AemValidationClient validationClient,
+      BrokerConnection connection,
+      CdsRuntime runtime) {
+
+    super(serviceConfig, runtime);
+
+    this.connectionProvider = connectionProvider;
+    this.managementClient = managementClient;
+    this.validationClient = validationClient;
+    this.connection = connection;
 
     Map<String, String> properties = serviceConfig.getConnection().getProperties();
     String skipManagementProperty = properties.get("skipManagement");
@@ -150,7 +175,8 @@ public class AemMessagingService extends AbstractMessagingService {
     connectionProvider.asyncConnectionInitialization(serviceConfig, connectionConsumer);
   }
 
-  private String getMessageTopic(Message message) {
+  @VisibleForTesting
+  String getMessageTopic(Message message) {
     if (message instanceof JmsTextMessage textMessage) {
       if (textMessage.getFacade() instanceof AmqpJmsTextMessageFacade textMessageFacade) {
         return textMessageFacade.getDestination().getAddress();
@@ -164,8 +190,6 @@ public class AemMessagingService extends AbstractMessagingService {
 
   private void validate(String endpoint) {
     if (!this.aemBrokerValidated) {
-      AemValidationClient validationClient = new AemValidationClient(this.validationBinding);
-
       try {
         validationClient.validate(endpoint, this.subaccountId);
         this.aemBrokerValidated = true;
