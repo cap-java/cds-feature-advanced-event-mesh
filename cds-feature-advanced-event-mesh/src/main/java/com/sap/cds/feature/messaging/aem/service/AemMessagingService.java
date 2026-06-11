@@ -54,13 +54,7 @@ public class AemMessagingService extends AbstractMessagingService {
     this.managementClient = new AemManagementClient(binding);
     this.validationClient = new AemValidationClient(validationBinding);
 
-    Map<String, String> properties = serviceConfig.getConnection().getProperties();
-    String skipManagementProperty = properties.get("skipManagement");
-    String skip_ManagementProperty = properties.get("skip-management");
-    this.skipManagement = Boolean.parseBoolean(skipManagementProperty) || Boolean.parseBoolean(skip_ManagementProperty);
-    String subaccountId = properties.getOrDefault("subaccountId", null);
-    String subaccount_Id = properties.getOrDefault("subaccount-id", null);
-    this.subaccountId = subaccountId != null ? subaccountId : subaccount_Id;
+    applyConnectionProperties(serviceConfig);
   }
 
   @VisibleForTesting
@@ -79,6 +73,10 @@ public class AemMessagingService extends AbstractMessagingService {
     this.validationClient = validationClient;
     this.connection = connection;
 
+    applyConnectionProperties(serviceConfig);
+  }
+
+  private void applyConnectionProperties(MessagingServiceConfig serviceConfig) {
     Map<String, String> properties = serviceConfig.getConnection().getProperties();
     String skipManagementProperty = properties.get("skipManagement");
     String skip_ManagementProperty = properties.get("skip-management");

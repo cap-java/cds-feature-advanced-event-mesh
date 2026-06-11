@@ -81,6 +81,7 @@ class AemValidationClientIT {
         client.validate("https://broker.example.com:943", "");
 
         HttpRequest[] recorded = mockServer.retrieveRecordedRequests(request().withMethod("POST"));
+        assertEquals(1, recorded.length);
         JsonNode body = MAPPER.readTree(recorded[0].getBodyAsString());
         assertFalse(body.has("subaccountId"), "subaccountId must not be present for empty string");
     }
@@ -95,6 +96,7 @@ class AemValidationClientIT {
         client.validate("https://mr-connection-xyz.messaging.solace.cloud:943/some/path", null);
 
         HttpRequest[] recorded = mockServer.retrieveRecordedRequests(request().withMethod("POST"));
+        assertEquals(1, recorded.length);
         JsonNode body = MAPPER.readTree(recorded[0].getBodyAsString());
         assertEquals("mr-connection-xyz.messaging.solace.cloud", body.get("hostName").asText());
     }

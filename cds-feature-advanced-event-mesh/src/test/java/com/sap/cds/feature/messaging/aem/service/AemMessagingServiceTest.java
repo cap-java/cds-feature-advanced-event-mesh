@@ -159,6 +159,7 @@ class AemMessagingServiceTest {
     void emitTopicMessage_triggers_validate_on_first_call() throws Exception {
         service.emitTopicMessage("my/topic", messageEventContext);
         verify(validationClient).validate(MANAGEMENT_URI, null);
+        verify(brokerConnection).emitTopicMessage("topic://my/topic", messageEventContext);
     }
 
     @Test
