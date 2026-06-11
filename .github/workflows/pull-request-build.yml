@@ -12,6 +12,7 @@ on:
 jobs:
   blackduck:
     name: Blackduck Scan
+    environment: Codescans
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

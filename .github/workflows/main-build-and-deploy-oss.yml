@@ -11,6 +11,7 @@ on:
 jobs:
   blackduck:
     name: Blackduck Scan
+    environment: Release
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
