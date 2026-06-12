@@ -225,4 +225,55 @@ public class AemMessagingServiceConfigurationTest {
 
     assertTrue(services.stream().findFirst().get().getSkipManagement());
   }
+
+  @Test
+  void testServiceConfigurationByKind_aem() {
+    CdsProperties properties = new CdsProperties();
+    MessagingServiceConfig config = new MessagingServiceConfig("cfg-kind");
+    config.setKind("aem");
+    config.getOutbox().setEnabled(false);
+    properties.getMessaging().getServices().put(config.getName(), config);
+
+    CdsRuntimeConfigurer configurer =
+        CdsRuntimeConfigurer.create(new SimplePropertiesProvider(properties));
+
+    configurer.serviceConfigurations();
+    configurer.eventHandlerConfigurations();
+
+    List<AemMessagingService> services =
+        configurer
+            .getCdsRuntime()
+            .getServiceCatalog()
+            .getServices(AemMessagingService.class)
+            .collect(Collectors.toList());
+
+    assertEquals(1, services.size());
+    assertEquals("cfg-kind", services.get(0).getName());
+  }
+
+  @Test
+  void testServiceConfigurationByKind_advanced_event_mesh() {
+    CdsProperties properties = new CdsProperties();
+    MessagingServiceConfig config = new MessagingServiceConfig("cfg-aem-kind");
+    config.setKind("advanced-event-mesh");
+    config.getOutbox().setEnabled(false);
+    properties.getMessaging().getServices().put(config.getName(), config);
+
+    CdsRuntimeConfigurer configurer =
+        CdsRuntimeConfigurer.create(new SimplePropertiesProvider(properties));
+
+    configurer.serviceConfigurations();
+    configurer.eventHandlerConfigurations();
+
+    List<AemMessagingService> services =
+        configurer
+            .getCdsRuntime()
+            .getServiceCatalog()
+            .getServices(AemMessagingService.class)
+            .collect(Collectors.toList());
+
+    assertEquals(1, services.size());
+    assertEquals("cfg-aem-kind", services.get(0).getName());
+  }
+
 }
