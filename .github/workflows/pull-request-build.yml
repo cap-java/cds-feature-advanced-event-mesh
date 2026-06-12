@@ -12,6 +12,7 @@ on:
 jobs:
   blackduck:
     name: Blackduck Scan
+    if: github.actor != 'dependabot[bot]'
     environment: Codescans
     runs-on: ubuntu-latest
     timeout-minutes: 30
