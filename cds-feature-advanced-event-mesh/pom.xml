@@ -102,6 +102,13 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>net.bytebuddy</groupId>
+      <artifactId>byte-buddy-agent</artifactId>
+      <version>1.17.7</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -109,8 +116,22 @@
     <plugins>
 
       <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>resolve-byte-buddy-agent</id>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
+          <argLine>@{argLine} -javaagent:${net.bytebuddy:byte-buddy-agent:jar}</argLine>
           <excludes>
             <exclude>**/*IT.java</exclude>
           </excludes>
@@ -119,6 +140,9 @@
 
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>@{argLine} -javaagent:${net.bytebuddy:byte-buddy-agent:jar}</argLine>
+        </configuration>
         <executions>
           <execution>
             <goals>
