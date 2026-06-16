@@ -90,7 +90,7 @@
       <groupId>org.mock-server</groupId>
       <artifactId>mockserver-netty</artifactId>
       <scope>test</scope>
-      <version>7.0.0</version>
+      <version>7.1.0</version>
       <exclusions>
         <exclusion>
           <groupId>com.google.guava</groupId>
