@@ -1,0 +1,73 @@
+name: Dependabot changelog triage
+
+# For major Dependabot PRs (which auto-merge-deps.yml flags as 'needs-review'),
+# this job uses Claude Code to fetch the upstream changelog, scan for breaking
+# changes, and post a one-paragraph risk summary as a PR comment.
+#
+# This does NOT auto-merge — it only enriches the PR with context so the
+# human reviewer can decide quickly.
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    if: >
+      github.actor == 'dependabot[bot]' &&
+      github.event.label.name == 'major-update'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Claude changelog triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            A Dependabot PR is proposing a major version bump:
+
+              dependency: ${{ steps.meta.outputs.dependency-names }}
+              from:       ${{ steps.meta.outputs.previous-version }}
+              to:         ${{ steps.meta.outputs.new-version }}
+              ecosystem:  ${{ steps.meta.outputs.package-ecosystem }}
+
+            Steps:
+              1. Use WebFetch / WebSearch to find the upstream changelog or
+                 release notes for this version range.
+              2. Identify breaking changes that could affect this repo.
+                 Cross-check against actual usages in the codebase.
+              3. Classify risk as LOW / MEDIUM / HIGH and explain in 2-3
+                 sentences. Be concrete — name the API or behavior change,
+                 don't just say 'there are breaking changes'.
+              4. Post the result as a PR comment using `gh pr comment`.
+                 Format:
+
+                   ## 🤖 Changelog triage — risk: <LEVEL>
+
+                   <2-3 sentence summary>
+
+                   <bullet list of breaking changes that touch this repo,
+                    or "no usages found in this repo" if none>
+
+            PR URL: ${{ github.event.pull_request.html_url }}
+          claude_args: |
+            --allowed-tools "Bash(gh pr comment:*),Bash(gh pr view:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Read,Glob,Grep,WebFetch,WebSearch"
+            --max-turns 25
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

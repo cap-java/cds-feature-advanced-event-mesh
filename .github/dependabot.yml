@@ -4,9 +4,22 @@ updates:
     directories:
       - "/"
     schedule:
-      interval: daily
+      interval: weekly
     open-pull-requests-limit: 10
+    # Group patch + minor bumps so weekly noise stays bounded; majors land as
+    # individual PRs so the auto-merge workflow can hold them for human review.
+    groups:
+      maven-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: daily
+      interval: weekly
+    groups:
+      github-actions-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
