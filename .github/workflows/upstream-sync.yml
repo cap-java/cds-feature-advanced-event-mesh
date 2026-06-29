@@ -1,0 +1,161 @@
+name: Upstream sync
+
+# Daily rebase of this fork's main onto cap-java/cds-feature-advanced-event-mesh:main.
+#
+# Purpose: when this fork runs the automation pipelines (Dependabot,
+# idea-implement, maintenance), changes accumulate on the fork's main
+# while upstream's main continues to advance independently. Without
+# rebasing, the fork drifts further from upstream every day and the
+# divergence becomes painful to reconcile.
+#
+# This workflow:
+#   - Fetches cap-java/cds-feature-advanced-event-mesh:main
+#   - If main is already ahead of (or equal to) upstream: no-op
+#   - If main is behind: rebases the fork's main onto upstream/main and
+#     force-pushes
+#   - If the rebase has conflicts: leaves main alone, files an issue
+#     describing the conflict and a suggested resolution path
+#
+# Force-pushing main is normally aggressive, but on a fork that's running
+# automation pipelines it's the right move — open Dependabot PRs will
+# auto-rebase against the new base; idea-implement branches are short-lived.
+
+on:
+  schedule:
+    # Daily 06:43 UTC — early enough to be done before working hours,
+    # off the :00 stampede
+    - cron: '43 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UPSTREAM_REPO: cap-java/cds-feature-advanced-event-mesh
+  UPSTREAM_BRANCH: main
+
+jobs:
+  sync:
+    # Only run on forks — never on the upstream repo itself
+    if: github.repository != 'cap-java/cds-feature-advanced-event-mesh'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - name: Checkout fork main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream "https://github.com/${UPSTREAM_REPO}.git"
+          git fetch upstream "${UPSTREAM_BRANCH}"
+
+      - name: Detect divergence
+        id: check
+        run: |
+          UPSTREAM_SHA=$(git rev-parse "upstream/${UPSTREAM_BRANCH}")
+          FORK_SHA=$(git rev-parse HEAD)
+          BASE=$(git merge-base HEAD "upstream/${UPSTREAM_BRANCH}")
+
+          echo "upstream=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
+          echo "fork=${FORK_SHA}"         >> "$GITHUB_OUTPUT"
+
+          if [ "$UPSTREAM_SHA" = "$FORK_SHA" ]; then
+            echo "state=in-sync"          >> "$GITHUB_OUTPUT"
+          elif [ "$BASE" = "$UPSTREAM_SHA" ]; then
+            # Fork is strictly ahead of upstream — nothing to pull
+            echo "state=ahead"            >> "$GITHUB_OUTPUT"
+          elif [ "$BASE" = "$FORK_SHA" ]; then
+            # Fork is strictly behind upstream — fast-forward possible
+            echo "state=behind"           >> "$GITHUB_OUTPUT"
+          else
+            # Diverged — fork has commits upstream doesn't
+            echo "state=diverged"         >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fast-forward (fork is strictly behind)
+        if: steps.check.outputs.state == 'behind'
+        run: |
+          git merge --ff-only "upstream/${UPSTREAM_BRANCH}"
+          git push origin HEAD:main
+
+      - name: Attempt rebase (fork has diverged)
+        if: steps.check.outputs.state == 'diverged'
+        id: rebase
+        run: |
+          set +e
+          git rebase "upstream/${UPSTREAM_BRANCH}"
+          STATUS=$?
+          set -e
+          if [ $STATUS -ne 0 ]; then
+            # Capture the conflicting files for the issue body
+            CONFLICTS=$(git diff --name-only --diff-filter=U | sort -u)
+            git rebase --abort
+            echo "result=conflict" >> "$GITHUB_OUTPUT"
+            {
+              echo "conflicts<<EOF"
+              echo "$CONFLICTS"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "result=ok" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Force-push rebased main
+        if: steps.check.outputs.state == 'diverged' && steps.rebase.outputs.result == 'ok'
+        run: git push --force-with-lease origin HEAD:main
+
+      - name: File issue on conflict
+        if: steps.check.outputs.state == 'diverged' && steps.rebase.outputs.result == 'conflict'
+        run: |
+          BODY=$(cat <<EOF
+          The daily upstream-sync workflow could not rebase \`main\` onto
+          \`upstream/${UPSTREAM_BRANCH}\` because of merge conflicts.
+
+          **Upstream HEAD:** \`${{ steps.check.outputs.upstream }}\`
+          **Fork HEAD:** \`${{ steps.check.outputs.fork }}\`
+
+          **Conflicting files:**
+          \`\`\`
+          ${{ steps.rebase.outputs.conflicts }}
+          \`\`\`
+
+          ## Suggested resolution
+
+          \`\`\`bash
+          git fetch upstream
+          git checkout main
+          git rebase upstream/${UPSTREAM_BRANCH}
+          # resolve conflicts in the files above
+          git rebase --continue
+          git push --force-with-lease origin main
+          \`\`\`
+
+          The fork's \`main\` has been left untouched. Automation pipelines
+          will continue to run against the pre-rebase HEAD until this is
+          resolved. The longer it sits, the worse the conflict gets.
+          EOF
+          )
+          gh issue create \
+            --title "upstream-sync: merge conflict on $(date -u +%Y-%m-%d)" \
+            --label "automation,upstream-sync,needs-review" \
+            --body "$BODY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "### Upstream sync result" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- State: \`${{ steps.check.outputs.state }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Upstream HEAD: \`${{ steps.check.outputs.upstream }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Fork HEAD: \`${{ steps.check.outputs.fork }}\`" >> "$GITHUB_STEP_SUMMARY"

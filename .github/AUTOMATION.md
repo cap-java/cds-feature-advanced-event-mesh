@@ -72,6 +72,7 @@ enabled (see §2), and the team must have write access to the repo.
 | `idea-pr-opened.yml`              | PR opened touching `ideas/**`        | Claude critiques the spec as PR comment. |
 | `idea-implement.yml`              | Push to `main` touching `ideas/**`   | Claude implements `status: ready` ideas, opens PR. |
 | `maintenance.yml`                 | Weekly cron (Mon 10:23 UTC)          | README drift, snippet compile, stale TODO, `mvn dependency:analyze`. |
+| `upstream-sync.yml`               | Daily cron (06:43 UTC), forks only   | Rebases fork `main` onto upstream `main`; files an issue on conflict. No-op on the upstream repo. |
 
 ## 7. Killswitch
 
