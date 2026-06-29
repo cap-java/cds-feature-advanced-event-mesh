@@ -57,11 +57,10 @@ Create these labels (Issues → Labels → New label) so the workflows can apply
 
 ## 5. CODEOWNERS
 
-`.github/CODEOWNERS` is committed but uses `@cap-java/maintainers` as a
-placeholder. Before merging this scaffolding, replace it with the real
-team handle or a list of user handles. Code-owner enforcement only kicks
-in once branch protection has "Require review from Code Owners" enabled
-(see §2).
+`.github/CODEOWNERS` assigns ownership of `/ideas/` and automation files
+to `@cap-java/cds-feature-advanced-event-mesh-team`. Code-owner enforcement
+only kicks in once branch protection has "Require review from Code Owners"
+enabled (see §2), and the team must have write access to the repo.
 
 ## 6. Workflow inventory
 

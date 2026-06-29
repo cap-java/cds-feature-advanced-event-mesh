@@ -3,11 +3,9 @@
 # Anything under ideas/ requires code-owner review. Combined with branch
 # protection "Require review from Code Owners" this means even an approved
 # fork PR cannot merge an idea spec without a maintainer's sign-off.
-#
-# Replace the handles below with the actual maintainer set before enabling.
-/ideas/                 @cap-java/maintainers
+/ideas/                 @cap-java/cds-feature-advanced-event-mesh-team
 
 # Automation surfaces — keep tight, since these run with elevated permissions.
-/.github/workflows/     @cap-java/maintainers
-/.github/dependabot.yml @cap-java/maintainers
-/.github/CODEOWNERS     @cap-java/maintainers
+/.github/workflows/     @cap-java/cds-feature-advanced-event-mesh-team
+/.github/dependabot.yml @cap-java/cds-feature-advanced-event-mesh-team
+/.github/CODEOWNERS     @cap-java/cds-feature-advanced-event-mesh-team
