@@ -1,0 +1,11 @@
+# CODEOWNERS — see https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-security/customizing-your-repository/about-code-owners
+
+# Anything under ideas/ requires code-owner review. Combined with branch
+# protection "Require review from Code Owners" this means even an approved
+# fork PR cannot merge an idea spec without a maintainer's sign-off.
+/ideas/                 @cap-java/cds-feature-advanced-event-mesh-team
+
+# Automation surfaces — keep tight, since these run with elevated permissions.
+/.github/workflows/     @cap-java/cds-feature-advanced-event-mesh-team
+/.github/dependabot.yml @cap-java/cds-feature-advanced-event-mesh-team
+/.github/CODEOWNERS     @cap-java/cds-feature-advanced-event-mesh-team

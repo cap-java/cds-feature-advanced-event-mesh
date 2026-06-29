@@ -1,0 +1,108 @@
+name: Weekly maintenance
+
+# Weekly sweep that delegates four hygiene checks to opencode (via SAP AI
+# Core). Anything actionable is filed as an idea draft (status: draft)
+# under ideas/ — the same pipeline used for human-authored ideas.
+#
+# No code changes happen directly from this workflow. It only proposes.
+
+on:
+  schedule:
+    - cron: '23 10 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      AICORE_SERVICE_KEY: ${{ secrets.AICORE_SERVICE_KEY }}
+      OPENCODE_CONFIG: ${{ github.workspace }}/.github/bot-config/opencode.json
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: sapmachine
+          cache: maven
+
+      - name: Setup Maven 3.6.3
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '3.6.3'
+
+      - name: Run dependency:analyze (capture report)
+        run: |
+          mvn -B -ntp dependency:analyze > /tmp/dep-analyze.txt 2>&1 || true
+          head -200 /tmp/dep-analyze.txt
+
+      - name: Set up opencode
+        uses: ./.github/actions/setup-opencode
+
+      - name: Run maintenance sweep
+        run: |
+          cat <<EOF > /tmp/prompt.md
+          Weekly maintenance pass. Perform the four checks below. For
+          anything actionable, create a draft idea file under \`ideas/\`,
+          commit it on a new branch \`maintenance/weekly-YYYYMMDD-<slug>\`,
+          and open a PR with label \`automation,maintenance\`. Don't open
+          more than 4 PRs in one run.
+
+          ## Check 1: README drift
+
+          Compare \`README.md\` against
+          \`cds-feature-advanced-event-mesh/src/main/java/**\`: public API
+          mentioned in README that no longer exists, config keys renamed,
+          code snippets that wouldn't compile.
+
+          ## Check 2: README snippet compile
+
+          For each fenced \`\`\`java block in README.md, check that the
+          types and methods it references actually exist (grep for
+          class/method names). Don't literally compile — most are partial.
+
+          ## Check 3: Stale TODOs
+
+          Find TODO/FIXME/XXX comments. Use git blame for age. List
+          anything >90 days old. One idea per cluster of related TODOs,
+          not one per comment.
+
+          ## Check 4: Dependency hygiene
+
+          Read \`/tmp/dep-analyze.txt\`. Flag:
+            - "Used undeclared dependencies" — transitive deps to promote.
+            - "Unused declared dependencies" — verify with a grep before
+              trusting (the analyzer has false positives for compile-time
+              annotations and SPI).
+
+          ## Output format
+
+          For each finding worth filing, create:
+            ideas/maintenance-YYYYMMDD-<slug>.md
+
+          Frontmatter:
+            ---
+            status: draft
+            priority: low
+            created: <today>
+            source: maintenance-sweep
+            ---
+
+          Body: Problem / Proposed behavior / Acceptance criteria.
+          Short — these are starter specs.
+
+          Commit each idea file on its own branch and open a PR.
+          EOF
+          opencode run --print-logs < /tmp/prompt.md

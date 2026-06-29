@@ -1,0 +1,96 @@
+name: Idea PR — critique
+
+# Runs opencode (via SAP AI Core) to critique idea specs touched by a PR.
+# Posts one consolidated comment. Advisory only — doesn't approve or block.
+#
+# Triggered on `pull_request`, not `pull_request_target`, so secrets are
+# not exposed to forks. Fork PRs are gated by the repo's
+# "Require approval for fork workflows" setting.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'ideas/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  critique:
+    runs-on: ubuntu-latest
+    env:
+      AICORE_SERVICE_KEY: ${{ secrets.AICORE_SERVICE_KEY }}
+      OPENCODE_CONFIG: ${{ github.workspace }}/.github/bot-config/opencode.json
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: Identify changed idea files
+        id: changed
+        run: |
+          FILES=$(gh pr view "${{ github.event.pull_request.number }}" \
+            --json files --jq '.files[].path' \
+            | grep '^ideas/.*\.md$' \
+            | grep -v '^ideas/README\.md$' \
+            | grep -v '^ideas/_example\.md$' || true)
+          echo "files<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$FILES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          if [ -z "$FILES" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up opencode
+        if: steps.changed.outputs.has_changes == 'true'
+        uses: ./.github/actions/setup-opencode
+
+      - name: Run critique
+        if: steps.changed.outputs.has_changes == 'true'
+        run: |
+          cat <<EOF > /tmp/prompt.md
+          A pull request is proposing changes to one or more idea specs
+          under \`ideas/\`. Your job is to critique each spec and post
+          one consolidated comment on the PR.
+
+          Changed files:
+          ${{ steps.changed.outputs.files }}
+
+          For each file:
+            1. Read it.
+            2. Read \`ideas/README.md\` for the convention.
+            3. Scan the relevant parts of the codebase
+               (cds-feature-advanced-event-mesh/src/**) to check
+               feasibility and flag conflicts with existing APIs.
+            4. Produce a critique covering:
+               - Missing sections (problem / proposed behavior /
+                 API sketch / acceptance criteria / out of scope)
+               - Ambiguity — anywhere the implementer would have to guess
+               - Concrete conflicts with existing code (cite file:line)
+               - Suggested refinements to API shape
+               - Estimated implementation size (S / M / L) and whether
+                 it fits the ~1500 LOC implementer cap
+
+          Post the result as ONE PR comment via \`gh pr comment\`. Use
+          this structure, with one section per changed file:
+
+            # 🤖 Idea critique
+
+            ## \`ideas/<filename>\`
+
+            **Readiness:** ✅ ready to mark \`status: ready\` | ⚠️ needs work | ❌ blocked
+
+            <bulleted critique>
+
+            **Implementation size:** S/M/L (~N LOC)
+
+          Be specific. "Add acceptance criteria" is useless; "AC 3 says
+          'fast' — define a latency budget in ms" is useful.
+
+          PR URL: ${{ github.event.pull_request.html_url }}
+          EOF
+          opencode run --print-logs < /tmp/prompt.md

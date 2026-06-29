@@ -1,0 +1,75 @@
+name: Dependabot changelog triage
+
+# For major Dependabot PRs (which auto-merge-deps.yml flags as 'needs-review'),
+# this job uses opencode (routed via SAP AI Core) to fetch the upstream
+# changelog, scan for breaking changes, and post a one-paragraph risk
+# summary as a PR comment.
+#
+# Does NOT auto-merge — only enriches the PR.
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    if: >
+      github.actor == 'dependabot[bot]' &&
+      github.event.label.name == 'major-update'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      AICORE_SERVICE_KEY: ${{ secrets.AICORE_SERVICE_KEY }}
+      OPENCODE_CONFIG: ${{ github.workspace }}/.github/bot-config/opencode.json
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up opencode
+        uses: ./.github/actions/setup-opencode
+
+      - name: Run changelog triage
+        run: |
+          cat <<EOF > /tmp/prompt.md
+          A Dependabot PR is proposing a major version bump:
+
+            dependency: ${{ steps.meta.outputs.dependency-names }}
+            from:       ${{ steps.meta.outputs.previous-version }}
+            to:         ${{ steps.meta.outputs.new-version }}
+            ecosystem:  ${{ steps.meta.outputs.package-ecosystem }}
+
+          Steps:
+            1. Use WebFetch / WebSearch to find the upstream changelog or
+               release notes for this version range.
+            2. Identify breaking changes that could affect this repo.
+               Cross-check against actual usages in the codebase.
+            3. Classify risk as LOW / MEDIUM / HIGH and explain in 2-3
+               sentences. Be concrete — name the API or behavior change,
+               don't say 'there are breaking changes'.
+            4. Post the result as a PR comment using \`gh pr comment\`.
+               Format:
+
+                 ## 🤖 Changelog triage — risk: <LEVEL>
+
+                 <2-3 sentence summary>
+
+                 <bullet list of breaking changes that touch this repo,
+                  or "no usages found in this repo" if none>
+
+          PR URL: ${{ github.event.pull_request.html_url }}
+          EOF
+          opencode run --print-logs < /tmp/prompt.md

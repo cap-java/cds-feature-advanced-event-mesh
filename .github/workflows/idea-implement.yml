@@ -1,0 +1,184 @@
+name: Idea — implement
+
+# When an idea file with `status: ready` lands on main, opencode (via
+# SAP AI Core) implements it on a feature branch, runs mvn verify, and
+# opens a PR for human review.
+#
+# Trigger is `push` to main — forks cannot push to main, so this workflow
+# is contributor-gated by construction. Human authorization is the merge
+# of the idea spec PR.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ideas/**.md'
+  workflow_dispatch:
+    inputs:
+      idea_file:
+        description: 'Path to idea file (e.g. ideas/foo.md)'
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  MAVEN_VERSION: '3.6.3'
+  JAVA_VERSION: '17'
+  DIFF_LOC_CAP: '1500'
+
+jobs:
+  identify:
+    runs-on: ubuntu-latest
+    outputs:
+      files: ${{ steps.scan.outputs.files }}
+      count: ${{ steps.scan.outputs.count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Identify ready idea files
+        id: scan
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            CANDIDATES="${{ inputs.idea_file }}"
+          else
+            CANDIDATES=$(git diff --name-only \
+              "${{ github.event.before }}" "${{ github.sha }}" \
+              -- 'ideas/*.md' \
+              | grep -v '^ideas/README\.md$' \
+              | grep -v '^ideas/_example\.md$' || true)
+          fi
+
+          READY=""
+          for f in $CANDIDATES; do
+            [ -f "$f" ] || continue
+            if head -n 10 "$f" | grep -qE '^status:\s*ready\s*$'; then
+              READY="$READY $f"
+            fi
+          done
+          READY=$(echo "$READY" | xargs)
+
+          echo "files=$READY" >> "$GITHUB_OUTPUT"
+          if [ -z "$READY" ]; then
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "count=$(echo "$READY" | wc -w | xargs)" >> "$GITHUB_OUTPUT"
+          fi
+
+  implement:
+    needs: identify
+    if: needs.identify.outputs.count != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        idea: ${{ fromJSON(format('[{0}]', needs.identify.outputs.files)) }}
+      max-parallel: 2
+    env:
+      AICORE_SERVICE_KEY: ${{ secrets.AICORE_SERVICE_KEY }}
+      OPENCODE_CONFIG: ${{ github.workspace }}/.github/bot-config/opencode.json
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: sapmachine
+          cache: maven
+
+      - name: Setup Maven ${{ env.MAVEN_VERSION }}
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: ${{ env.MAVEN_VERSION }}
+
+      - name: Set up opencode
+        uses: ./.github/actions/setup-opencode
+
+      - name: Derive branch + slug
+        id: br
+        run: |
+          SLUG=$(basename "${{ matrix.idea }}" .md | tr -c 'a-z0-9-' '-' | sed 's/--*/-/g; s/^-//; s/-$//')
+          echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
+          echo "branch=idea/$SLUG" >> "$GITHUB_OUTPUT"
+
+      - name: Create implementation branch
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git push origin --delete "${{ steps.br.outputs.branch }}" 2>/dev/null || true
+          git checkout -b "${{ steps.br.outputs.branch }}"
+
+      - name: Run implementer
+        run: |
+          cat <<EOF > /tmp/prompt.md
+          Implement the idea specified in \`${{ matrix.idea }}\`.
+
+          ## Process
+
+          1. Read \`${{ matrix.idea }}\`. Read \`ideas/README.md\` for
+             the convention.
+          2. Explore the codebase enough to know where this fits —
+             \`cds-feature-advanced-event-mesh/src/main/java/**\`,
+             existing tests under \`src/test/\`, README sections it touches.
+          3. Implement the change. Match the surrounding code style.
+             Prefer the smallest viable change.
+          4. Add or extend tests so the acceptance criteria are covered.
+             Tests live in \`cds-feature-advanced-event-mesh/src/test/java/\`.
+          5. Update the README/docs if the public API changed.
+          6. Run \`mvn -B -ntp verify\` from the repo root. It MUST pass.
+             If it fails, iterate.
+          7. Update the frontmatter of \`${{ matrix.idea }}\`: change
+             \`status: ready\` to \`status: in-progress\`.
+          8. Commit everything with a clear message referencing the idea
+             file.
+
+          ## Hard limits
+
+          - Diff size: at most ${{ env.DIFF_LOC_CAP }} LOC (added + removed,
+            excluding generated code and test fixtures).
+            Check after each commit with:
+              git diff --stat main..HEAD | tail -1
+            If you exceed it, ABORT — do NOT push. Instead, leave the
+            branch as-is and write a file \`.implementation-aborted.md\`
+            at the repo root explaining what to split out.
+          - Wall clock: 60 minutes (the job will be killed at the timeout).
+
+          ## On success
+
+          When \`mvn verify\` is green and the diff is within the cap,
+          push the branch:
+
+            git push origin "${{ steps.br.outputs.branch }}"
+
+          Then open a PR with \`gh pr create\`:
+
+            - Title: \`feat: <one-line from the idea>\`
+            - Body: link to the idea file, list what changed, paste the
+              \`git diff --stat\` summary, and explicitly call out anything
+              from the acceptance criteria you couldn't cover.
+            - Labels: \`automation,idea\`
+            - Do NOT mark as ready-to-merge — leave for human review.
+
+          ## On failure
+
+          If \`mvn verify\` won't pass, or the diff cap is exceeded:
+
+            - Don't push a half-broken implementation.
+            - Open a draft PR with the work-in-progress branch.
+            - In the PR body, explain what's blocking.
+            - Add labels \`automation,idea,needs-review\`.
+          EOF
+          opencode run --print-logs < /tmp/prompt.md
