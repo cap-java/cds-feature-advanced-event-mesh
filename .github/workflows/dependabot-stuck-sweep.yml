@@ -1,13 +1,11 @@
 name: Stuck Dependabot PR sweep
 
-# Once a week, find Dependabot PRs that have been open >7 days with failing
-# checks. For each, run Claude headless to attempt a fix — typically a rebase,
-# a test adjustment, or a follow-up bump. If Claude can fix it, it pushes a
-# commit; if not, it leaves a comment explaining what's blocking the PR.
+# Weekly cron: find Dependabot PRs open >7 days with failing checks; let
+# opencode (via SAP AI Core) attempt a fix per PR. Pushes a commit on
+# success, otherwise leaves a comment.
 
 on:
   schedule:
-    # Mondays 09:17 UTC — off the :00 stampede
     - cron: '17 9 * * 1'
   workflow_dispatch:
 
@@ -20,6 +18,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    env:
+      AICORE_SERVICE_KEY: ${{ secrets.AICORE_SERVICE_KEY }}
+      OPENCODE_CONFIG: ${{ github.workspace }}/.github/bot-config/opencode.json
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,7 +29,6 @@ jobs:
       - name: Find stuck Dependabot PRs
         id: find
         run: |
-          # PRs older than 7 days, by dependabot, failing checks
           STUCK=$(gh pr list \
             --author "app/dependabot" \
             --state open \
@@ -40,38 +41,35 @@ jobs:
           echo "$STUCK" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
           echo "count=$(echo "$STUCK" | jq 'length')" >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run Claude to attempt fixes
+      - name: Set up opencode
         if: steps.find.outputs.count != '0'
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
-            The following Dependabot PRs have been open >7 days with failing
-            checks:
+        uses: ./.github/actions/setup-opencode
 
-            ${{ steps.find.outputs.stuck }}
+      - name: Run fix attempts
+        if: steps.find.outputs.count != '0'
+        run: |
+          cat <<EOF > /tmp/prompt.md
+          The following Dependabot PRs have been open >7 days with failing
+          checks:
 
-            For each PR:
+          ${{ steps.find.outputs.stuck }}
 
-              1. `gh pr checkout <number>` into a local branch.
-              2. Look at the failing check logs via
-                 `gh run view --log-failed <run-id>`.
-              3. Decide if it's a fixable mechanical issue (test needs
-                 adjusting for an API change, a sibling dep also needs
-                 bumping, a config tweak). If yes:
-                   - Fix it locally
-                   - Run `mvn -B verify` to confirm it passes
-                   - Commit and push to the PR branch
-              4. If it isn't fixable mechanically, leave a comment on the PR
-                 summarizing what's blocking it in 2-3 sentences.
-              5. Move to the next PR.
+          For each PR:
 
-            Budget: one fix attempt per PR. Don't loop on the same PR.
-          claude_args: |
-            --allowed-tools "Bash,Read,Write,Edit,Glob,Grep"
-            --max-turns 200
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            1. \`gh pr checkout <number>\` into a local branch.
+            2. Look at the failing check logs via
+               \`gh run view --log-failed <run-id>\`.
+            3. Decide if it's a fixable mechanical issue (test needs
+               adjusting for an API change, a sibling dep also needs
+               bumping, a config tweak). If yes:
+                 - Fix it locally
+                 - Run \`mvn -B verify\` to confirm it passes
+                 - Commit and push to the PR branch
+            4. If it isn't fixable mechanically, leave a comment on the PR
+               summarizing what's blocking it in 2-3 sentences.
+            5. Move to the next PR.
+
+          Budget: one fix attempt per PR. Don't loop on the same PR.
+          EOF
+          opencode run --print-logs < /tmp/prompt.md

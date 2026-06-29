@@ -1,0 +1,38 @@
+name: Setup opencode
+description: |
+  Installs the opencode CLI at a pinned version, verifies its SHA256, and
+  puts it on PATH. Used by every automation workflow that needs to run
+  Claude (via SAP AI Core) headlessly.
+
+  Pattern lifted from cap/sherlock — see docs/ARCHITECTURE.md there for
+  why this is preferred over the upstream opencode GitHub Action (the
+  upstream action assumes github.com / api.opencode.ai OIDC; we want a
+  vendor-neutral install that works anywhere).
+
+inputs:
+  version:
+    description: opencode release tag (without leading 'v')
+    required: false
+    default: "1.14.33"
+  sha256:
+    description: SHA256 of opencode-linux-x64.tar.gz for the pinned version
+    required: false
+    default: "ab3de3d40a67573419ec74916210cf90dcf8c180dc9d8052db71ac9f55c28810"
+
+runs:
+  using: composite
+  steps:
+    - name: Install opencode
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "$HOME/bin"
+        curl -fsSL \
+          "https://github.com/anomalyco/opencode/releases/download/v${{ inputs.version }}/opencode-linux-x64.tar.gz" \
+          -o /tmp/opencode.tar.gz
+        echo "${{ inputs.sha256 }}  /tmp/opencode.tar.gz" | sha256sum -c -
+        tar -xz -C "$HOME/bin" opencode < /tmp/opencode.tar.gz
+        rm /tmp/opencode.tar.gz
+        chmod +x "$HOME/bin/opencode"
+        echo "$HOME/bin" >> "$GITHUB_PATH"
+        "$HOME/bin/opencode" --version

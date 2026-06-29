@@ -1,15 +1,13 @@
 name: Weekly maintenance
 
-# Weekly sweep that delegates four hygiene checks to Claude. Anything
-# actionable is filed as an idea draft (status: draft) under ideas/ —
-# the same pipeline you use for human-authored ideas. Maintainer reviews,
-# flips to `ready`, idea-implement.yml takes over.
+# Weekly sweep that delegates four hygiene checks to opencode (via SAP AI
+# Core). Anything actionable is filed as an idea draft (status: draft)
+# under ideas/ — the same pipeline used for human-authored ideas.
 #
 # No code changes happen directly from this workflow. It only proposes.
 
 on:
   schedule:
-    # Mondays 10:23 UTC — staggered after the stuck-PR sweep
     - cron: '23 10 * * 1'
   workflow_dispatch:
 
@@ -23,6 +21,10 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    env:
+      AICORE_SERVICE_KEY: ${{ secrets.AICORE_SERVICE_KEY }}
+      OPENCODE_CONFIG: ${{ github.workspace }}/.github/bot-config/opencode.json
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,68 +46,63 @@ jobs:
       - name: Run dependency:analyze (capture report)
         run: |
           mvn -B -ntp dependency:analyze > /tmp/dep-analyze.txt 2>&1 || true
-          echo "==== dep-analyze.txt head ===="
           head -200 /tmp/dep-analyze.txt
 
-      - name: Run Claude maintenance sweep
-        uses: anthropics/claude-code-action@v1
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
-            Weekly maintenance pass. Perform the four checks below. For
-            anything actionable, create a draft idea file under `ideas/`,
-            commit it on a new branch `maintenance/weekly-YYYYMMDD-<slug>`,
-            and open a PR with label `automation,maintenance`. Don't open
-            more than 4 PRs in one run — pick the most valuable findings.
+      - name: Set up opencode
+        uses: ./.github/actions/setup-opencode
 
-            ## Check 1: README drift
+      - name: Run maintenance sweep
+        run: |
+          cat <<EOF > /tmp/prompt.md
+          Weekly maintenance pass. Perform the four checks below. For
+          anything actionable, create a draft idea file under \`ideas/\`,
+          commit it on a new branch \`maintenance/weekly-YYYYMMDD-<slug>\`,
+          and open a PR with label \`automation,maintenance\`. Don't open
+          more than 4 PRs in one run.
 
-            Compare `README.md` against `cds-feature-advanced-event-mesh/src/main/java/**`:
-            public API mentioned in README that no longer exists, config
-            keys renamed, code snippets that wouldn't compile.
+          ## Check 1: README drift
 
-            ## Check 2: README snippet compile
+          Compare \`README.md\` against
+          \`cds-feature-advanced-event-mesh/src/main/java/**\`: public API
+          mentioned in README that no longer exists, config keys renamed,
+          code snippets that wouldn't compile.
 
-            For each fenced ```java block in README.md, check that the
-            types and methods it references actually exist in the codebase
-            (grep for class/method names). Don't try to literally compile
-            them — most are partial.
+          ## Check 2: README snippet compile
 
-            ## Check 3: Stale TODOs
+          For each fenced \`\`\`java block in README.md, check that the
+          types and methods it references actually exist (grep for
+          class/method names). Don't literally compile — most are partial.
 
-            Find TODO/FIXME/XXX comments in the codebase. Use git blame to
-            get their age. List anything >90 days old. One idea file per
-            cluster of related TODOs, not one per comment.
+          ## Check 3: Stale TODOs
 
-            ## Check 4: Dependency hygiene
+          Find TODO/FIXME/XXX comments. Use git blame for age. List
+          anything >90 days old. One idea per cluster of related TODOs,
+          not one per comment.
 
-            Read `/tmp/dep-analyze.txt`. Flag:
-              - "Used undeclared dependencies" — transitive deps the code
-                relies on. Worth promoting to explicit.
-              - "Unused declared dependencies" — verify with a grep before
-                trusting (the analyzer has false positives for compile-time
-                annotations and SPI).
+          ## Check 4: Dependency hygiene
 
-            ## Output format
+          Read \`/tmp/dep-analyze.txt\`. Flag:
+            - "Used undeclared dependencies" — transitive deps to promote.
+            - "Unused declared dependencies" — verify with a grep before
+              trusting (the analyzer has false positives for compile-time
+              annotations and SPI).
 
-            For each finding worth filing, create a file:
-              ideas/maintenance-YYYYMMDD-<slug>.md
+          ## Output format
 
-            Frontmatter:
-              ---
-              status: draft
-              priority: low
-              created: <today>
-              source: maintenance-sweep
-              ---
+          For each finding worth filing, create:
+            ideas/maintenance-YYYYMMDD-<slug>.md
 
-            Body: standard idea structure (Problem / Proposed behavior /
-            Acceptance criteria). Keep it short — these are starter specs,
-            not novels.
+          Frontmatter:
+            ---
+            status: draft
+            priority: low
+            created: <today>
+            source: maintenance-sweep
+            ---
 
-            Commit each idea file on its own branch and open a PR.
-          claude_args: |
-            --allowed-tools "Bash,Read,Write,Edit,Glob,Grep"
-            --max-turns 100
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          Body: Problem / Proposed behavior / Acceptance criteria.
+          Short — these are starter specs.
+
+          Commit each idea file on its own branch and open a PR.
+          EOF
+          opencode run --print-logs < /tmp/prompt.md

@@ -6,6 +6,12 @@ setup** a maintainer must do in the GitHub UI for the automation to work
 safely. The workflow files themselves are self-contained; this is the
 "flip these switches" companion.
 
+The LLM-backed steps use [**opencode**](https://github.com/anomalyco/opencode)
+(headless CLI mode) routed through **SAP AI Core** via opencode's
+built-in `sap-ai-core` provider. No proxy process needed — the provider
+does XSUAA OAuth2 client-credentials exchange internally. Pattern lifted
+from [cap/sherlock](https://github.tools.sap/cap/sherlock).
+
 ---
 
 ## 1. Secrets
@@ -14,9 +20,17 @@ Add these to **Settings → Secrets and variables → Actions**:
 
 | Secret                | Used by                              | Notes |
 |-----------------------|--------------------------------------|-------|
-| `ANTHROPIC_API_KEY`   | dependabot-triage, idea-*, maintenance | Claude API key. Bedrock/Vertex creds work too — see the [Claude Code Action docs](https://github.com/anthropics/claude-code-action). |
+| `AICORE_SERVICE_KEY`  | dependabot-triage, idea-*, maintenance | The SAP AI Core service key JSON, verbatim. The opencode `sap-ai-core` provider parses this and handles token exchange. |
 
 `GITHUB_TOKEN` is provisioned automatically by Actions; no setup needed.
+
+### Model selection
+
+The default model is `sap-ai-core/anthropic--claude-4.6-opus`, configured
+in [`.github/bot-config/opencode.json`](./bot-config/opencode.json). Swap
+to `claude-4.6-sonnet`, `gpt-5`, or `gemini-2.5-pro` by editing that file
+— no workflow changes needed. Which models are actually available depends
+on what's deployed in your AI Core tenant.
 
 ## 2. Branch protection on `main`
 
@@ -52,8 +66,10 @@ Create these labels (Issues → Labels → New label) so the workflows can apply
 
 - `needs-review` — Dependabot major bumps; `idea-implement` failures
 - `major-update` — Dependabot major bumps (triggers `dependabot-triage`)
-- `automation` — anything opened by a Claude-powered workflow
+- `automation` — anything opened by an LLM-powered workflow
 - `idea` — PRs touching `ideas/**`
+- `maintenance` — PRs from the weekly sweep
+- `upstream-sync` — issues filed by the fork's drift workflow
 
 ## 5. CODEOWNERS
 
@@ -67,32 +83,36 @@ enabled (see §2), and the team must have write access to the repo.
 | Workflow                          | Trigger                              | What it does |
 |-----------------------------------|--------------------------------------|--------------|
 | `auto-merge-deps.yml`             | Dependabot PR opened                 | Auto-approves + enables auto-merge for patch/minor; labels majors `needs-review`. |
-| `dependabot-triage.yml`           | PR labeled `major-update`            | Claude fetches changelog, posts a risk summary as PR comment. |
-| `dependabot-stuck-sweep.yml`      | Weekly cron (Mon 09:17 UTC)          | Claude attempts to fix Dependabot PRs stuck >7 days. |
-| `idea-pr-opened.yml`              | PR opened touching `ideas/**`        | Claude critiques the spec as PR comment. |
-| `idea-implement.yml`              | Push to `main` touching `ideas/**`   | Claude implements `status: ready` ideas, opens PR. |
+| `dependabot-triage.yml`           | PR labeled `major-update`            | opencode fetches changelog, posts a risk summary as PR comment. |
+| `dependabot-stuck-sweep.yml`      | Weekly cron (Mon 09:17 UTC)          | opencode attempts to fix Dependabot PRs stuck >7 days. |
+| `idea-pr-opened.yml`              | PR opened touching `ideas/**`        | opencode critiques the spec as PR comment. |
+| `idea-implement.yml`              | Push to `main` touching `ideas/**`   | opencode implements `status: ready` ideas, opens PR. |
 | `maintenance.yml`                 | Weekly cron (Mon 10:23 UTC)          | README drift, snippet compile, stale TODO, `mvn dependency:analyze`. |
 | `upstream-sync.yml`               | Daily cron (06:43 UTC), forks only   | Rebases fork `main` onto upstream `main`; files an issue on conflict. No-op on the upstream repo. |
+
+The `setup-opencode` composite action in `.github/actions/setup-opencode/`
+installs the opencode CLI with a pinned version + SHA256 check. Bump the
+`version` / `sha256` defaults in that action's `action.yml` when you want
+to upgrade — verify the SHA against the official release before changing.
 
 ## 7. Killswitch
 
 To disable a workflow temporarily, **Settings → Actions → Workflows →
 [name] → ⋯ → Disable workflow**. The workflow file stays in the repo.
 
-To disable Claude across the board, revoke `ANTHROPIC_API_KEY`. All Claude
-workflows will fail loudly on next run; nothing destructive happens.
+To disable LLM access across the board, revoke `AICORE_SERVICE_KEY` or
+delete the AI Core deployment. All LLM-backed workflows will fail loudly
+on the next run; nothing destructive happens.
 
 ## 8. Cost notes
 
-- `auto-merge-deps`: free (no Claude calls).
+- `auto-merge-deps`: free (no LLM calls).
 - `dependabot-triage`: only fires on major bumps (~once a month). Cheap.
-- `dependabot-stuck-sweep`: weekly, only if there are stuck PRs. Bounded
-  by `--max-turns 200` across all stuck PRs combined.
-- `idea-pr-opened`: bounded critique (~25 turns).
-- `idea-implement`: highest-cost workflow. Bounded by `--max-turns 300`
-  and a 60-minute job timeout. Diff-size cap stops runaway PRs.
-- `maintenance`: weekly. Bounded by `--max-turns 100`.
+- `dependabot-stuck-sweep`: weekly, only if there are stuck PRs.
+- `idea-pr-opened`: bounded by job wall-clock; one critique per spec.
+- `idea-implement`: highest-cost workflow. 60-minute job timeout, plus
+  the diff-size cap (`DIFF_LOC_CAP=1500`) which the agent self-enforces.
+- `maintenance`: weekly. Capped at 4 new PRs per run by the prompt.
 
-If you want a hard monthly cap, set it on the Anthropic console (Usage
-limits) rather than in workflows — it's the only place that enforces it
-across all runs.
+For a hard monthly cap, set quotas on the AI Core deployment side — it's
+the only enforcement point that survives a runaway workflow.
