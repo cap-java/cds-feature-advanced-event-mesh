@@ -4,10 +4,34 @@ env:
   MAVEN_VERSION: '3.6.3'
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [ "main" ]
+    types: [reopened, synchronize, opened]
 
 jobs:
+  blackduck:
+    name: Blackduck Scan
+    if: github.actor != 'dependabot[bot]'
+    environment: Codescans
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Scan With Black Duck
+        uses: cap-java/.github/actions/scan-with-blackduck@296573b55e906f5c77a1855bcfe4285cbbc5cac4
+        with:
+          blackduck_token: ${{ secrets.BLACK_DUCK_TOKEN }}
+          maven-version: ${{ env.MAVEN_VERSION }}
+          project-name: com.sap.cds.feature.advanced-event-mesh
+          included-modules: cds-feature-advanced-event-mesh
+          scan_mode: RAPID
+          rapid_compare_mode: BOM_COMPARE # PRs might only be blocked by things they introduce, not by pre-existing issues that could have appeared in the main branch in the meantime
+
   build:
 
     runs-on: ubuntu-latest
