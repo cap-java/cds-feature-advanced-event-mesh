@@ -13,6 +13,7 @@ import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationLoa
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import jakarta.jms.Connection;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -44,6 +45,7 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
                 () ->
                     new ServiceException(
                         "AMQP URI key is missing in the service binding. Please check the service binding configuration."));
+    validateAmqpUri(amqpUri, endpointView.getUri().orElse(null), binding.getName().orElse("<unnamed>"));
     amqpUri = amqpUri + SASL_MECHANISM_URI_PARAMETER;
 
     ServiceBindingDestinationOptions options =
@@ -108,5 +110,43 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
     }
 
     return token;
+  }
+
+  static void validateAmqpUri(String amqpUri, String managementUri, String bindingName) {
+    URI parsed;
+    try {
+      parsed = new URI(amqpUri);
+    } catch (URISyntaxException e) {
+      throw new ServiceException(
+          "Invalid AMQP URI in binding '" + bindingName + "': " + e.getMessage(), e);
+    }
+    if (parsed.getScheme() == null || !parsed.getScheme().equalsIgnoreCase("amqps")) {
+      throw new ServiceException(
+          "AMQP URI in binding '"
+              + bindingName
+              + "' must use scheme 'amqps' (got '"
+              + parsed.getScheme()
+              + "').");
+    }
+    if (managementUri != null) {
+      URI mgmt;
+      try {
+        mgmt = new URI(managementUri);
+      } catch (URISyntaxException e) {
+        return;
+      }
+      String amqpHost = parsed.getHost();
+      String mgmtHost = mgmt.getHost();
+      if (amqpHost != null && mgmtHost != null && !amqpHost.equalsIgnoreCase(mgmtHost)) {
+        throw new ServiceException(
+            "AMQP URI host '"
+                + amqpHost
+                + "' does not match the management URI host '"
+                + mgmtHost
+                + "' in binding '"
+                + bindingName
+                + "'.");
+      }
+    }
   }
 }
