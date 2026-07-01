@@ -17,6 +17,7 @@ import com.sap.cds.services.utils.environment.ServiceBindingUtils;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +48,13 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
                         || binding.getTags().contains(BINDING_AEM_LABEL))
             .toList();
     Optional<ServiceBinding> validationBinding =
-        configurer
-            .getCdsRuntime()
-            .getEnvironment()
-            .getServiceBindings()
-            .filter(binding -> ServiceBindingUtils.matches(binding, BINDING_AEM_VALIDATION_LABEL))
-            .findFirst();
+        selectValidationBinding(
+            configurer
+                .getCdsRuntime()
+                .getEnvironment()
+                .getServiceBindings()
+                .filter(binding -> ServiceBindingUtils.matches(binding, BINDING_AEM_VALIDATION_LABEL))
+                .toList());
 
     if (bindings.isEmpty()) {
       logger.info("No service bindings with name '{}' found", BINDING_AEM_LABEL);
@@ -175,5 +177,23 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
         binding.getName().get());
 
     return outboxed(service, serviceConfig, runtime);
+  }
+
+  static Optional<ServiceBinding> selectValidationBinding(List<ServiceBinding> validationBindings) {
+    if (validationBindings.size() > 1) {
+      String names =
+          validationBindings.stream()
+              .map(b -> b.getName().orElse("<unnamed>"))
+              .collect(Collectors.joining(", "));
+      throw new ServiceException(
+          "Found "
+              + validationBindings.size()
+              + " '"
+              + BINDING_AEM_VALIDATION_LABEL
+              + "' service bindings ("
+              + names
+              + "). Exactly one validation binding is supported per application.");
+    }
+    return validationBindings.isEmpty() ? Optional.empty() : Optional.of(validationBindings.get(0));
   }
 }

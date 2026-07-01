@@ -3,15 +3,21 @@ package com.sap.cds.feature.messaging.aem.service;
 import static com.sap.cds.services.outbox.OutboxService.unboxed;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sap.cds.services.Service;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.environment.CdsProperties;
 import com.sap.cds.services.environment.CdsProperties.Messaging.MessagingServiceConfig;
 import com.sap.cds.services.impl.environment.SimplePropertiesProvider;
 import com.sap.cds.services.outbox.OutboxService;
 import com.sap.cds.services.runtime.CdsRuntimeConfigurer;
+import com.sap.cloud.environment.servicebinding.api.DefaultServiceBinding;
+import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
@@ -224,5 +230,45 @@ public class AemMessagingServiceConfigurationTest {
         .toList();
 
     assertTrue(services.stream().findFirst().get().getSkipManagement());
+  }
+
+  @Test
+  void selectValidationBinding_returnsEmpty_whenNoneProvided() {
+    Optional<ServiceBinding> result =
+        AemMessagingServiceConfiguration.selectValidationBinding(List.of());
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void selectValidationBinding_returnsSingle_whenExactlyOneProvided() {
+    ServiceBinding only = validationBinding("primary");
+    Optional<ServiceBinding> result =
+        AemMessagingServiceConfiguration.selectValidationBinding(List.of(only));
+    assertTrue(result.isPresent());
+    assertEquals("primary", result.get().getName().orElseThrow());
+  }
+
+  @Test
+  void selectValidationBinding_throws_whenMultipleProvided() {
+    ServiceBinding first = validationBinding("primary");
+    ServiceBinding second = validationBinding("secondary");
+
+    ServiceException ex =
+        assertThrows(
+            ServiceException.class,
+            () -> AemMessagingServiceConfiguration.selectValidationBinding(List.of(first, second)));
+
+    assertTrue(ex.getMessage().contains("primary"), ex.getMessage());
+    assertTrue(ex.getMessage().contains("secondary"), ex.getMessage());
+    assertTrue(ex.getMessage().contains("aem-validation-service"), ex.getMessage());
+  }
+
+  private static ServiceBinding validationBinding(String name) {
+    return DefaultServiceBinding.builder()
+        .copy(Map.<String, Object>of())
+        .withName(name)
+        .withServiceName(AemMessagingServiceConfiguration.BINDING_AEM_VALIDATION_LABEL)
+        .withCredentials(Map.of())
+        .build();
   }
 }
