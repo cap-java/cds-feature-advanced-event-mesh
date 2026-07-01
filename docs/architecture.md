@@ -56,7 +56,9 @@ The single SPI registration is in `META-INF/services/com.sap.cds.services.runtim
 
 ## 3. Boot flow (what happens when the app starts)
 
+
 `AemMessagingServiceConfiguration.services()` (line 32) is called by `CdsRuntimeConfigurer`:
+
 
 1. **Register OAuth2 property suppliers** with the SAP Cloud SDK destination loader so any HTTP destination built from an AEM binding automatically does the OAuth2 client-credentials dance. There are *two* suppliers because management and validation use different OAuth2 servers (one in IAS, one in BTP/XSUAA).
 2. **Find bindings**: any service binding named `advanced-event-mesh` *or* tagged with that label, plus one binding for `aem-validation-service`. The validation binding is mandatory when at least one AEM broker binding is present — `createMessagingService` (called per binding, line 159) throws a `ServiceException` if it is absent. If there are no AEM broker bindings the missing validation binding is silently ignored.
