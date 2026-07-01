@@ -1,5 +1,6 @@
 package com.sap.cds.feature.messaging.aem.jms;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
 import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.messaging.jms.BrokerConnection;
@@ -61,6 +62,13 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
             .build();
   }
 
+  @VisibleForTesting
+  AemMessagingConnectionProvider(ServiceBinding binding, Destination destination) {
+    super(binding.getName().get());
+    this.binding = binding;
+    this.destination = destination;
+  }
+
   @Override
   protected BrokerConnection createBrokerConnection(
       String name, Map<String, String> clientProperties) throws Exception {
@@ -93,7 +101,8 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
     return new BrokerConnection(name, factory);
   }
 
-  private Optional<String> fetchToken() {
+  @VisibleForTesting
+  Optional<String> fetchToken() {
     Optional<String> token =
         this.destination.asHttp().getHeaders().stream()
             .filter(h -> h.getName().equals(HttpHeaders.AUTHORIZATION))
@@ -102,7 +111,8 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
     return token;
   }
 
-  private String getToken(String value) {
+  @VisibleForTesting
+  String getToken(String value) {
     String token = null;
     if (value != null) {
       String[] parts = value.split(" ");
