@@ -173,23 +173,4 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
       }
     }
   }
-
-      }
-      String mgmtHost = mgmt.getHost();
-      if (mgmtHost == null) {
-        throw new ServiceException(
-            "Management URI in binding '" + bindingName + "' has no host component.");
-      }
-      if (!amqpHost.equalsIgnoreCase(mgmtHost)) {
-        throw new ServiceException(
-            "AMQP URI host '"
-                + amqpHost
-                + "' does not match the management URI host '"
-                + mgmtHost
-                + "' in binding '"
-                + bindingName
-                + "'.");
-      }
-    }
-  }
 }
