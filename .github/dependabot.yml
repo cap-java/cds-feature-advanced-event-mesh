@@ -10,7 +10,7 @@ updates:
       # cds-services-bom major bumps require coordinated compat review; pin via manual PRs.
       - dependency-name: "com.sap.cds:cds-services-bom"
         update-types: ["version-update:semver-major"]
-
+  - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: daily
