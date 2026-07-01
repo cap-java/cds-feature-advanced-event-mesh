@@ -11,7 +11,7 @@ This is a thin (~1.1k LoC) CAP Java plugin that plugs **SAP Integration Suite, A
 1. Implementing the abstract methods of `AbstractMessagingService` (from `cds-services-messaging` core).
 2. Providing AMQP/JMS connectivity via Qpid + a custom `BrokerConnectionProvider` that does OAuth2 (XOAUTH2 SASL) with token rotation.
 3. Providing a REST (SEMP v2) management client to create/delete queues and queue→topic subscriptions on the Solace broker.
-4. Calling a separate AEM "validation service" once before the first publish to prove the broker is provisioned for this subaccount.
+4. Calling a separate AEM "validation service" once before the first publish to confirm the broker was resold through SAP (rather than sourced directly from Solace).
 
 Structurally it is almost identical to `cds-feature-enterprise-messaging` — that plugin was the template.
 
@@ -76,10 +76,10 @@ A single `AemMessagingConnectionProvider` is shared per binding, so all services
 
 The plugin reads **two** distinct service bindings:
 
-| Binding        | Tag/Name                  | Purpose                                                                  | Auth                                                            |
-|----------------|---------------------------|--------------------------------------------------------------------------|-----------------------------------------------------------------|
-| AEM broker     | `advanced-event-mesh`     | AMQP+JMS data plane *and* SEMP management plane                          | OAuth2 client_credentials against IAS (`authentication-service`) |
-| Validation     | `aem-validation-service`  | One-time handshake confirming the VMR is provisioned for this subaccount | OAuth2 against XSUAA (`handshake.oa2`)                          |
+| Binding        | Tag/Name                  | Purpose                                                                             | Auth                                                            |
+|----------------|---------------------------|-------------------------------------------------------------------------------------|-----------------------------------------------------------------|
+| AEM broker     | `advanced-event-mesh`     | AMQP+JMS data plane *and* SEMP management plane                                     | OAuth2 client_credentials against IAS (`authentication-service`) |
+| Validation     | `aem-validation-service`  | One-time handshake confirming the AEM broker was resold through SAP (not sourced directly from Solace) | OAuth2 against XSUAA (`handshake.oa2`)                          |
 
 In the test fixture (`default-env.json`) the AEM binding is `user-provided` (manually created with the right tag), while the validation binding is a real BTP service binding.
 
@@ -150,9 +150,9 @@ Notably, AEM does **not** override `toFullyQualifiedTopicName` or `toFullyQualif
 
 ## 8. Validation handshake
 
-`AemValidationClient.validate(managementUri, subaccountId)` POSTs `{"hostName": <host extracted from managementUri>, "subaccountId"?: ...}` to the validation service's handshake endpoint (the destination base URI from the validation binding). Only the *host* component of `managementUri` is sent, not the full URI. It runs at most once per service instance — guarded by the `aemBrokerValidated` volatile `Boolean` flag in `AemMessagingService.validate()` (line 165), and only on the first publish (lazily via `emitTopicMessage`). A 200 confirms this BTP subaccount is entitled to this VMR. Anything else → `ServiceException`, no message is sent.
+`AemValidationClient.validate(managementUri, subaccountId)` POSTs `{"hostName": <host extracted from managementUri>, "subaccountId"?: ...}` to the validation service's handshake endpoint (the destination base URI from the validation binding). Only the *host* component of `managementUri` is sent, not the full URI. It runs at most once per service instance — guarded by the `aemBrokerValidated` volatile `Boolean` flag in `AemMessagingService.validate()` (line 165), and only on the first publish (lazily via `emitTopicMessage`). A 2xx confirms the AEM instance was resold through SAP; anything ≥ 400 indicates the customer sourced it directly from Solace, and the plugin refuses to publish (`ServiceException`).
 
-This is a compliance / anti-misconfiguration check: it prevents an app from being mistakenly bound to a broker in the wrong subaccount.
+This is a commercial-entitlement check: the plugin only supports AEM brokers obtained through SAP's resale channel, so it verifies that up-front before sending any messages.
 
 ---
 
