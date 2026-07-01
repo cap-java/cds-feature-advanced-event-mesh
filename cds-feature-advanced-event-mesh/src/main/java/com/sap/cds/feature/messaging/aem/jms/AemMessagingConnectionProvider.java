@@ -138,16 +138,28 @@ public class AemMessagingConnectionProvider extends BrokerConnectionProvider {
               + parsed.getScheme()
               + "').");
     }
+    String amqpHost = parsed.getHost();
+    if (amqpHost == null) {
+      throw new ServiceException(
+          "AMQP URI in binding '" + bindingName + "' has no host component.");
+    }
     if (managementUri != null) {
       URI mgmt;
       try {
         mgmt = new URI(managementUri);
       } catch (URISyntaxException e) {
+        logger.warn(
+            "Skipping host-consistency check for binding '{}': management URI is malformed ({}).",
+            bindingName,
+            e.getMessage());
         return;
       }
-      String amqpHost = parsed.getHost();
       String mgmtHost = mgmt.getHost();
-      if (amqpHost != null && mgmtHost != null && !amqpHost.equalsIgnoreCase(mgmtHost)) {
+      if (mgmtHost == null) {
+        throw new ServiceException(
+            "Management URI in binding '" + bindingName + "' has no host component.");
+      }
+      if (!amqpHost.equalsIgnoreCase(mgmtHost)) {
         throw new ServiceException(
             "AMQP URI host '"
                 + amqpHost

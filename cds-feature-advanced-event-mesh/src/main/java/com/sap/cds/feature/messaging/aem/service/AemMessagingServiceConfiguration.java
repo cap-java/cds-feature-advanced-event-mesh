@@ -17,7 +17,6 @@ import com.sap.cds.services.utils.environment.ServiceBindingUtils;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -182,9 +181,9 @@ public class AemMessagingServiceConfiguration implements CdsRuntimeConfiguration
   static Optional<ServiceBinding> selectValidationBinding(List<ServiceBinding> validationBindings) {
     if (validationBindings.size() > 1) {
       String names =
-          validationBindings.stream()
-              .map(b -> b.getName().orElse("<unnamed>"))
-              .collect(Collectors.joining(", "));
+          String.join(
+              ", ",
+              validationBindings.stream().map(b -> b.getName().orElse("<unnamed>")).toList());
       throw new ServiceException(
           "Found "
               + validationBindings.size()

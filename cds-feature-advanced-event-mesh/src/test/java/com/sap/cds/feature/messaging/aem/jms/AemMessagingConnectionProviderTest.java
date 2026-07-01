@@ -170,4 +170,30 @@ class AemMessagingConnectionProviderTest {
             AemMessagingConnectionProvider.validateAmqpUri(
                 "amqps://broker.example.com:5671", "::not a uri::", "my-binding"));
   }
+
+  @Test
+  void validateAmqpUri_rejectsAmqpUriWithoutHost() {
+    // Opaque URI parses successfully but has no host component.
+    ServiceException ex =
+        assertThrows(
+            ServiceException.class,
+            () ->
+                AemMessagingConnectionProvider.validateAmqpUri(
+                    "amqps:opaque-body", null, "my-binding"));
+    assertTrue(ex.getMessage().contains("my-binding"), ex.getMessage());
+    assertTrue(ex.getMessage().contains("host"), ex.getMessage());
+  }
+
+  @Test
+  void validateAmqpUri_rejectsManagementUriWithoutHost() {
+    // Management URI parses but yields a null host — must not silently pass the check.
+    ServiceException ex =
+        assertThrows(
+            ServiceException.class,
+            () ->
+                AemMessagingConnectionProvider.validateAmqpUri(
+                    "amqps://broker.example.com:5671", "https:opaque-body", "my-binding"));
+    assertTrue(ex.getMessage().contains("my-binding"), ex.getMessage());
+    assertTrue(ex.getMessage().contains("host"), ex.getMessage());
+  }
 }
