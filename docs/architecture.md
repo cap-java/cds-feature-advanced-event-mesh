@@ -21,9 +21,9 @@ Structurally it is almost identical to `cds-feature-enterprise-messaging` — th
 
 The CAP Java messaging story (in `cds-services/repo-cds-services/cds-services-messaging`) is built around three core types that any broker plugin must satisfy:
 
-- **`AbstractMessagingService`** (`cds-services-messaging/.../service/AbstractMessagingService.java:34`) — owns the lifecycle (`init` / `stop`), the CAP event-handler integration (`@On` / `@Before` for `TopicMessageEventContext`), the auto-completion of known topics, optional CloudEvents wrapping, and the queue/subscription bootstrap (`createOrUpdateQueuesAndSubscriptions`, line 87). It declares the abstract methods every broker must implement: `removeQueue`, `createQueue`, `createQueueSubscription`, `registerQueueListener`, `emitTopicMessage`.
-- **`BrokerConnection`** (`.../jms/BrokerConnection.java:24`) — wraps a JMS `Connection` plus a `MessageEmitter`, and registers `MessageQueueReader`s. Owns the auto-reconnect timer with exponential backoff (2 → 10 min).
-- **`BrokerConnectionProvider`** (`.../jms/BrokerConnectionProvider.java:21`) — abstract factory with one method `createBrokerConnection`. Provides connection sharing across services with the same client config (`configuredConnections` map) and asynchronous initialization on a daemon thread.
+- **`AbstractMessagingService`** (`cds-services-messaging/.../service/AbstractMessagingService.java`) — owns the lifecycle (`init` / `stop`), the CAP event-handler integration (`@On` / `@Before` for `TopicMessageEventContext`), the auto-completion of known topics, optional CloudEvents wrapping, and the queue/subscription bootstrap (`createOrUpdateQueuesAndSubscriptions`). It declares the abstract methods every broker must implement: `removeQueue`, `createQueue`, `createQueueSubscription`, `registerQueueListener`, `emitTopicMessage`.
+- **`BrokerConnection`** (`.../jms/BrokerConnection.java`) — wraps a JMS `Connection` plus a `MessageEmitter`, and registers `MessageQueueReader`s. Owns the auto-reconnect timer with exponential backoff (2 → 10 min).
+- **`BrokerConnectionProvider`** (`.../jms/BrokerConnectionProvider.java`) — abstract factory with one method `createBrokerConnection`. Provides connection sharing across services with the same client config (`configuredConnections` map) and asynchronous initialization on a daemon thread.
 
 The AEM plugin extends `AbstractMessagingService` and `BrokerConnectionProvider`; everything else (event dispatching, retries, outboxing, reconnect) is reused unchanged.
 
@@ -57,11 +57,11 @@ The single SPI registration is in `META-INF/services/com.sap.cds.services.runtim
 ## 3. Boot flow (what happens when the app starts)
 
 
-`AemMessagingServiceConfiguration.services()` (line 32) is called by `CdsRuntimeConfigurer`:
+`AemMessagingServiceConfiguration.services()` is called by `CdsRuntimeConfigurer`:
 
 
 1. **Register OAuth2 property suppliers** with the SAP Cloud SDK destination loader so any HTTP destination built from an AEM binding automatically does the OAuth2 client-credentials dance. There are *two* suppliers because management and validation use different OAuth2 servers (one in IAS, one in BTP/XSUAA).
-2. **Find bindings**: any service binding named `advanced-event-mesh` *or* tagged with that label, plus one binding for `aem-validation-service`. The validation binding is mandatory when at least one AEM broker binding is present — `createMessagingService` (called per binding, line 159) throws a `ServiceException` if it is absent. If there are no AEM broker bindings the missing validation binding is silently ignored.
+2. **Find bindings**: any service binding named `advanced-event-mesh` *or* tagged with that label, plus one binding for `aem-validation-service`. The validation binding is mandatory when at least one AEM broker binding is present — `createMessagingService` (called per binding) throws a `ServiceException` if it is absent. If there are no AEM broker bindings the missing validation binding is silently ignored.
 3. **Per AEM binding**, decide which `MessagingServiceConfig`(s) to materialize:
    - explicit `cds.messaging.services` entries that match by binding name,
    - then by `kind: aem` / `kind: advanced-event-mesh` (only when there's exactly one binding — to avoid ambiguity),
@@ -106,11 +106,11 @@ In the test fixture (`default-env.json`) the AEM binding is `user-provided` (man
 
 ## 5. Connection plane (AMQP)
 
-`AemMessagingConnectionProvider` (jms/AemMessagingConnectionProvider.java:25):
+`AemMessagingConnectionProvider` (jms/AemMessagingConnectionProvider.java):
 
 - Reads `endpoints.advanced-event-mesh.amqp_uri` from the binding and appends `/?amqp.saslMechanisms=XOAUTH2` to force OAuth-bearer SASL.
 - Builds a SAP Cloud SDK `DefaultHttpDestination` so the SDK handles OAuth2 token acquisition + caching (via the registered `AemManagementOauth2PropertySupplier`). The destination is a deliberate trick — it's not actually used for HTTP, just as a token holder. `vpn` is stashed as a destination property.
-- In `createBrokerConnection`, builds a Qpid `JmsConnectionFactory(vpn, "token", uri)` and registers a `PASSWORD_OVERRIDE` extension (line 89). Each time Qpid opens a connection, this lambda calls `fetchToken()` which pulls the freshly-cached `Authorization: Bearer <jwt>` header out of the SDK destination and substitutes it as the SASL password. This is the documented Solace pattern for OAuth on Qpid (https://solace.community/discussion/1677).
+- In `createBrokerConnection`, builds a Qpid `JmsConnectionFactory(vpn, "token", uri)` and registers a `PASSWORD_OVERRIDE` extension. Each time Qpid opens a connection, this lambda calls `fetchToken()` which pulls the freshly-cached `Authorization: Bearer <jwt>` header out of the SDK destination and substitutes it as the SASL password. This is the documented Solace pattern for OAuth on Qpid (https://solace.community/discussion/1677).
 - The base `BrokerConnection` then handles connect/reconnect/listeners.
 
 ### Token refresh strategy (subtle)
@@ -121,13 +121,13 @@ Token refresh for AMQP relies entirely on the SAP Cloud SDK's destination-side O
 
 ## 6. Management plane (SEMP v2)
 
-`AemManagementClient` (client/AemManagementClient.java:17) calls Solace SEMP v2 endpoints under `/SEMP/v2/config/msgVpns/{vpn}/queues`:
+`AemManagementClient` (client/AemManagementClient.java) calls Solace SEMP v2 endpoints under `/SEMP/v2/config/msgVpns/{vpn}/queues`:
 
 - `createQueue(name, properties)` — checks-then-creates, sets `permission=consume`, `ingressEnabled=true`, `egressEnabled=true`. Honors `deadMsgQueue` from properties by ensuring the DMQ exists first.
 - `createQueueSubscription(queue, topic)` — checks the existing subscription list before POSTing, to be idempotent.
 - `removeQueue(name)` — DELETE.
 
-`AemMessagingService` (service/AemMessagingService.java:31) wires these into the abstract methods, with a `skipManagement` escape hatch (driven by `connection.properties.skipManagement`) that lets operators provision the broker out-of-band and have CAP just listen/publish without touching SEMP. The `subaccountId` knob is similarly threaded into the validation call.
+`AemMessagingService` (service/AemMessagingService.java) wires these into the abstract methods, with a `skipManagement` escape hatch (driven by `connection.properties.skipManagement`) that lets operators provision the broker out-of-band and have CAP just listen/publish without touching SEMP. The `subaccountId` knob is similarly threaded into the validation call.
 
 ---
 
@@ -135,14 +135,14 @@ Token refresh for AMQP relies entirely on the SAP Cloud SDK's destination-side O
 
 `AbstractMessagingService` needs to map an inbound message back to a CAP topic name to dispatch the right event handler. The location of "the topic name" in the AMQP message is broker-specific:
 
-- AEM (Solace, raw AMQP) → `getMessageTopic` reads `getDestination().getAddress()` from both `AmqpJmsTextMessageFacade` (text messages) and `AmqpJmsBytesMessageFacade` (binary messages) (lines 153–162). The destination address *is* the topic.
+- AEM (Solace, raw AMQP) → `getMessageTopic` reads `getDestination().getAddress()` from both `AmqpJmsTextMessageFacade` (text messages) and `AmqpJmsBytesMessageFacade` (binary messages). The destination address *is* the topic.
 - EM (Solace via SAP Event Mesh) → reads `.getType()` from the same facade types instead.
 
 The accessor is passed to `connection.registerQueueListener(queue, listener, this::getMessageTopic)` as a `TopicAccessor`, which `MessageQueueReader` uses on each delivered message.
 
 ### Outbound topic prefixing
 
-When emitting, AEM's `emitTopicMessage` (line 144) first calls `validate()` (line 145) then passes `"topic://" + topic` to the broker (line 146); EM passes `"topic:" + topic` (single colon). Trivial wire-format difference; both Solace-flavored.
+When emitting, AEM's `emitTopicMessage` first calls `validate()` then passes `"topic://" + topic` to the broker; EM passes `"topic:" + topic` (single colon). Trivial wire-format difference; both Solace-flavored.
 
 Notably, AEM does **not** override `toFullyQualifiedTopicName` or `toFullyQualifiedQueueName` like EM does. EM has a non-trivial namespace story (`$namespace` placeholders, `+/+/+/` wildcards for cross-tenant subscriptions, `.`→`/` translation for CloudEvents). AEM treats topics as opaque strings; multi-tenant fan-out and namespace conventions are the user's problem.
 
@@ -150,7 +150,7 @@ Notably, AEM does **not** override `toFullyQualifiedTopicName` or `toFullyQualif
 
 ## 8. Validation handshake
 
-`AemValidationClient.validate(managementUri, subaccountId)` POSTs `{"hostName": <host extracted from managementUri>, "subaccountId"?: ...}` to the validation service's handshake endpoint (the destination base URI from the validation binding). Only the *host* component of `managementUri` is sent, not the full URI. It runs at most once per service instance — guarded by the `aemBrokerValidated` volatile `Boolean` flag in `AemMessagingService.validate()` (line 165), and only on the first publish (lazily via `emitTopicMessage`). A 2xx confirms the AEM instance was resold through SAP; anything ≥ 400 indicates the customer sourced it directly from Solace, and the plugin refuses to publish (`ServiceException`).
+`AemValidationClient.validate(managementUri, subaccountId)` POSTs `{"hostName": <host extracted from managementUri>, "subaccountId"?: ...}` to the validation service's handshake endpoint (the destination base URI from the validation binding). Only the *host* component of `managementUri` is sent, not the full URI. It runs at most once per service instance — guarded by the `aemBrokerValidated` volatile `Boolean` flag in `AemMessagingService.validate()`, and only on the first publish (lazily via `emitTopicMessage`). A 2xx confirms the AEM instance was resold through SAP; anything ≥ 400 indicates the customer sourced it directly from Solace, and the plugin refuses to publish (`ServiceException`).
 
 This is a commercial-entitlement check: the plugin only supports AEM brokers obtained through SAP's resale channel, so it verifies that up-front before sending any messages.
 
@@ -188,8 +188,8 @@ Both keys are also accepted in kebab-case (`skip-management`, `subaccount-id`).
 
 ## 11. Notes & caveats worth flagging
 
-- `AemEndpointView.getAemEndpoint()` (line 65) takes the first value from the `endpoints` map via an iterator, then validates that the key `"advanced-event-mesh"` exists in the map. This is fragile: if a second entry is added to `endpoints` whose insertion order precedes `"advanced-event-mesh"`, the wrong endpoint value will be returned even though the key guard passes.
-- `aemBrokerValidated` is declared as a boxed `volatile Boolean` (not primitive `boolean`). The check-then-act pattern in `validate()` (lines 165–175) is not synchronized, so under concurrent calls to `emitTopicMessage` the validation can be invoked multiple times before the flag is set to `true`.
+- `AemEndpointView.getAemEndpoint()` takes the first value from the `endpoints` map via an iterator, then validates that the key `"advanced-event-mesh"` exists in the map. This is fragile: if a second entry is added to `endpoints` whose insertion order precedes `"advanced-event-mesh"`, the wrong endpoint value will be returned even though the key guard passes.
+- `aemBrokerValidated` is declared as a boxed `volatile Boolean` (not primitive `boolean`). The check-then-act pattern in `validate()` is not synchronized, so under concurrent calls to `emitTopicMessage` the validation can be invoked multiple times before the flag is set to `true`.
 - `getMessageTopic` returns `null` if it doesn't recognize the JMS message type. The `MessageQueueReader` then has to handle `null` — worth double-checking the failure path during audits.
 - Two duplicate property reads (`skipManagement` vs `skip-management`, `subaccountId` vs `subaccount-id`) — supports both naming conventions.
 - `AemValidationClient` posts to path `""` (empty string) because the destination URI itself is the full handshake URL — relies on Apache HttpClient resolving an empty string to the base URI.
