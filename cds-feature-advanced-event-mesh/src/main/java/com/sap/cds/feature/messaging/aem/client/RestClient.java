@@ -35,6 +35,10 @@ class RestClient {
             .getDestination(bindingDestinationOptions);
   }
 
+  RestClient(HttpDestination destination) {
+    this.destination = destination;
+  }
+
   public JsonNode getRequest(String path) throws IOException {
     HttpGet get = new HttpGet(path);
     try {
@@ -99,6 +103,9 @@ class RestClient {
           }
           if (APPLICATION_JSON.toString().startsWith(contentType)) {
             String jsonData = EntityUtils.toString(resp.getEntity());
+            if (jsonData == null || jsonData.isBlank()) {
+              return mapper.readValue("{}", JsonNode.class);
+            }
             return mapper.readValue(jsonData, JsonNode.class);
           } else {
             throw new IOException(

@@ -1,9 +1,11 @@
 package com.sap.cds.feature.messaging.aem.client;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.cds.feature.messaging.aem.client.binding.AemEndpointView;
 import com.sap.cds.services.ServiceException;
 import com.sap.cloud.environment.servicebinding.api.ServiceBinding;
+import com.sap.cloud.sdk.cloudplatform.connectivity.HttpDestination;
 import com.sap.cloud.sdk.cloudplatform.connectivity.ServiceBindingDestinationOptions;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -35,6 +37,16 @@ public class AemManagementClient extends RestClient {
     super(ServiceBindingDestinationOptions.forService(binding).build());
     this.endpointView = new AemEndpointView(binding);
     this.vpn = getVpn();
+  }
+
+  @VisibleForTesting
+  AemManagementClient(HttpDestination destination, String managementUri, String vpn) {
+    super(destination);
+    this.endpointView = new AemEndpointView(null) {
+      @Override public java.util.Optional<String> getUri() { return java.util.Optional.of(managementUri); }
+      @Override public java.util.Optional<String> getVpn() { return java.util.Optional.of(vpn); }
+    };
+    this.vpn = vpn;
   }
 
   public String getEndpoint() {

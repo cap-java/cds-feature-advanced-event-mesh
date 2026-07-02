@@ -32,7 +32,7 @@
     <cds.install-cdsdk.version>8.7.3</cds.install-cdsdk.version>
     <qpid.version>2.10.0</qpid.version>    <!-- https://central.sonatype.com/artifact/org.apache.qpid/qpid-jms-client/versions -->
     <com.google.code.findbugs.jsr305.version>3.0.2</com.google.code.findbugs.jsr305.version>
-    <netty.version>4.2.14.Final</netty.version>    <!-- https://central.sonatype.com/artifact/io.netty/netty-bom/versions -->
+    <netty.version>4.2.15.Final</netty.version>    <!-- https://central.sonatype.com/artifact/io.netty/netty-bom/versions -->
   </properties>
 
   <groupId>com.sap.cds</groupId>
@@ -70,7 +70,7 @@
       <dependency>
         <groupId>com.sap.cloud.sdk</groupId>
         <artifactId>sdk-bom</artifactId>
-        <version>5.30.0</version>
+        <version>5.31.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -120,7 +120,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>6.0.3</version>
+      <version>6.1.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -197,7 +197,7 @@
       <plugin>
         <groupId>org.sonatype.central</groupId>
         <artifactId>central-publishing-maven-plugin</artifactId>
-        <version>0.10.0</version>
+        <version>0.11.0</version>
         <extensions>true</extensions>
       </plugin>
     </plugins>
@@ -229,6 +229,10 @@
           <version>3.5.6</version>
         </plugin>
         <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>3.5.6</version>
+        </plugin>
+        <plugin>
           <artifactId>maven-pmd-plugin</artifactId>
           <version>3.28.0</version>
         </plugin>
@@ -244,17 +248,17 @@
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.14</version>
+          <version>0.8.15</version>
         </plugin>
         <plugin>
           <groupId>org.pitest</groupId>
           <artifactId>pitest-maven</artifactId>
-          <version>1.25.3</version>
+          <version>1.25.5</version>
         </plugin>
         <plugin>
           <groupId>com.github.spotbugs</groupId>
           <artifactId>spotbugs-maven-plugin</artifactId>
-          <version>4.9.8.3</version>
+          <version>4.10.2.0</version>
         </plugin>
       </plugins>
     </pluginManagement>
