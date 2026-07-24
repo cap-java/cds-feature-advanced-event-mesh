@@ -17,7 +17,7 @@ jobs:
         java-version: [ 17, 21 ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Build
         uses: ./.github/actions/build
@@ -81,10 +81,10 @@ jobs:
     environment: Release-Snapshot
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up Java ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: sapmachine
@@ -94,7 +94,7 @@ jobs:
           server-password: DEPLOYMENT_PASS
 
       - name: Set up Maven ${{ env.MAVEN_VERSION }}
-        uses: stCarolas/setup-maven@v5
+        uses: stCarolas/setup-maven@d6af6abeda15e98926a57b5aa970a96bb37f97d1 # v5
         with:
           maven-version: ${{ env.MAVEN_VERSION }}
 
