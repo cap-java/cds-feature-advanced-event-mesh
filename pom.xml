@@ -32,7 +32,7 @@
     <cds.install-cdsdk.version>8.7.3</cds.install-cdsdk.version>
     <qpid.version>2.10.0</qpid.version>    <!-- https://central.sonatype.com/artifact/org.apache.qpid/qpid-jms-client/versions -->
     <com.google.code.findbugs.jsr305.version>3.0.2</com.google.code.findbugs.jsr305.version>
-    <netty.version>4.2.15.Final</netty.version>    <!-- https://central.sonatype.com/artifact/io.netty/netty-bom/versions -->
+    <netty.version>4.2.16.Final</netty.version>    <!-- https://central.sonatype.com/artifact/io.netty/netty-bom/versions -->
   </properties>
 
   <groupId>com.sap.cds</groupId>
